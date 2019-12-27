@@ -18,9 +18,17 @@ batteries_cc_library(
 	NAME
 		net
 	HDRS
+		"base.h"
+		"internal/parse.h"
+		"internal/escape.h"
 		"url.h"
+		"query.h"
 	SRCS
+		"base.cpp"
+		"internal/parse.cpp"
+		"internal/escape.cpp"
 		"url.cpp"
+		"query.cpp"
 	COPTS
 		${BATT_DEFAULT_COPTS}
 	DEPS
@@ -33,6 +41,7 @@ batteries_cc_test(
 		net_test
 	SRCS
 		"url_test.cpp"
+		"query_test.cpp"
 	COPTS
 		${BATT_TEST_COPTS}
 	DEPS

@@ -15,113 +15,22 @@
 #pragma once
 
 #include <string>
-#include <map>
 #include <vector>
-#include <utility>
+#include <map>
 
 #include <absl/strings/string_view.h>
 
 #include "batteries/errors/error.h"
+#include "base.h"
+#include "query.h"
+#include "internal/parse.h"
+#include "internal/escape.h"
 
 namespace batteries {
 
 namespace net {
 
-// Define types
-enum class UrlErrorCode;
-using QueryValue = std::pair<std::string, std::string>;
-using QueryValues = std::vector<QueryValue>;
-using UrlError = errors::Error<UrlErrorCode>;
-using byte = unsigned char;
-
-// Define constanst
-const UrlError UrlNoError = UrlError();
-
-namespace internal {
-
-// This determines what part of the encoding/decoding is being completed
-enum class encoding : uint8_t {
-    encodePath,
-    encodePathSegment,
-    encodeHost,
-    encodeZone,
-    encodeUserPassword,
-    encodeQueryComponent,
-    encodeFragment,
-};
-
-/**
- * @brief Takes a byte c that represents a value in hex and returns the decimal equivalent.
- * @param c The character to convert.
- */
-byte unhex(byte c);
-
-/**
- * @brief splits a string into two and only two parts at "match". If cutMatch is true, the delimiter is consumed.
- * @param s The string to split.
- * @param match The delimiter to search for and split if present.
- * @param cutMatch If true, the delimiter is consumed.
- */
-std::tuple<absl::string_view, absl::string_view> split(absl::string_view s, absl::string_view match, bool cutMatch);
-
-/**
- * @brief Determine if the port, if present, is a valid port number
- * @param port A string_view substring of the port portion of the URL.
- */
-bool validOptionalPort(absl::string_view port);
-
-/**
- * @brief reports whether s is a valid userinfo string per RFC 3986
- * 
- * Section 3.2.1:
- *     userinfo    = *( unreserved / pct-encoded / sub-delims / ":" )
- *     unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
- *     sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
- *                   / "*" / "+" / "," / ";" / "="
- *
- * It doesn't validate pct-encoded. The caller does that via func unescape.
- * 
- * @param s A string that reperesents the user info contained within a URL.
- * Usually of the form "username:password"
- */
-bool validUserinfo(absl::string_view s);
-
-/**
- * @brief unescapes a string; the mode specifies
- * which section of the URL string is being unescaped.
- * @param s A URL encoded string
- * @param mode The portion of the URL that is evaluated
- * @returns The decoded string and an error if any
- */
-std::tuple<std::string, UrlError> unescape(absl::string_view s, encoding mode);
-
-/**
- * @brief escapes a string; the mode specifies
- * which section of the URL string is being escaped.
- * @param s A raw string which contains reserved URL characters
- * @param mode The portion of the URL that is evaluated
- * @returns The encoded string
- */
-std::string escape(absl::string_view s, encoding mode);
-
-// Maybe rawurl is of the form scheme:path.
-// (Scheme must be [a-zA-Z][a-zA-Z0-9+-.]*)
-// If so, return scheme, path; else return "", rawurl.
-std::tuple<absl::string_view, absl::string_view, UrlError>
-parseScheme(absl::string_view rawurl);
-
-bool shouldEscape(byte c, encoding mode);
-
-} // end internal namespace
-
-enum class UrlErrorCode {
-    NoError = 0,
-    ParseError,
-    EscapeError,
-    InvalidHostError,
-    RangeError,
-};
-
+// Free Functions
 std::tuple<std::string, UrlError> unescapePath(absl::string_view path);
 std::tuple<std::string, UrlError> unescapeQuery(absl::string_view query);
 std::string escapePath(absl::string_view path);
@@ -138,14 +47,45 @@ public:
     // Parse functions
     UrlError parse(absl::string_view rawUrl);
     UrlError parseUri(absl::string_view rawUrl);
+
+    // Setters/Getters
+    std::string scheme() const;
+    void setScheme(std::string scheme);
+
+    std::string opaque() const;
+    void setOpaque(std::string opaque);
+
+    std::string username() const;
+    void setUsername(std::string username);
+
+    std::string password() const;
+    void setPassword(std::string password);
+
+    std::string host() const;
+    UrlError setHost(std::string host);
+
+    std::string port() const;
+    void setPort(uint16_t port);
+
+    std::string path() const;
+    std::string rawPath() const;
+    /** setPath sets the Path and RawPath fields of the URL based on the provided
+     * escaped path p. It maintains the invariant that RawPath is only specified
+     * when it differs from the default encoding of the path.
+     * For example:
+     * - setPath("/foo/bar")   will set Path="/foo/bar" and RawPath=""
+     * - setPath("/foo%2fbar") will set Path="/foo/bar" and RawPath="/foo%2fbar"
+     * setPath will return an error only if the provided path contains an invalid
+     * escaping.
+     */
     UrlError setPath(absl::string_view path);
 
-    // Query functions
-    void add(QueryValue value);
-    void add(std::string key, std::string value);
-    void del(absl::string_view key);
-    QueryValues get(absl::string_view key) const;
-    void set(std::string key, std::string value);
+    Query query() const;
+    void setQuery(const Query& query);
+
+    std::string fragment() const;
+    void setFragment(std::string fragment);
+
     
     // Conveniance functions
     bool hasScheme() const;
@@ -157,17 +97,9 @@ public:
     std::string escapedPath() const;
     std::string escapedQuery() const;
 
-public:
-    // Errors
-    static UrlError UrlParseError(absl::string_view s);
-    static UrlError UrlEscapeError(absl::string_view s);
-    static UrlError UrlInvalidHostError(absl::string_view s);
-    static UrlError UrlRangeError(absl::string_view s);
-
 private:
     UrlError parse(absl::string_view rawUrl, bool viaRequest);
     UrlError parseAuthority(absl::string_view authority);
-    UrlError parseHost(absl::string_view host);
 
 private:
     std::string mScheme;
@@ -175,16 +107,19 @@ private:
     std::string mUsername;
     std::string mPassword;
     std::string mHost;
+    std::string mPort;
     std::string mPath;
     std::string mRawPath;
-    std::multimap<std::string,std::string> mQuery;
-    std::string mRawQuery;
-    bool mForceQuery;
+    Query mQuery;
     std::string mFragment;
 };
 
-std::string to_string(Url url);
+}
 
 }
+
+namespace std {
+
+std::string to_string(batteries::net::Url url);
 
 }

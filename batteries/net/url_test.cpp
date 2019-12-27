@@ -22,6 +22,10 @@
 namespace {
 
 using encoding = batteries::net::internal::encoding;
+using QueryMap = batteries::net::internal::QueryMap;
+using UrlError = batteries::net::UrlError;
+
+// Test shouldEscape
 
 struct ShouldEscapeTest {
     unsigned char in;
@@ -104,10 +108,12 @@ INSTANTIATE_TEST_CASE_P(
     )
 );
 
+// Test unescape
+
 struct EscapeTest {
     std::string in;
     std::string out;
-    batteries::net::UrlError error;
+    UrlError error;
 };
 
 std::ostream & operator<<(std::ostream &os, const EscapeTest& et)
@@ -121,7 +127,7 @@ class MultipleUnescapeTests : public ::testing::TestWithParam<EscapeTest>{
 
 TEST_P(MultipleUnescapeTests, Unescape) {
     std::string path;
-    batteries::net::UrlError err;
+    UrlError err;
 
     // Test Queries
     std::tie(path, err) = batteries::net::unescapeQuery(GetParam().in);
@@ -174,27 +180,27 @@ INSTANTIATE_TEST_CASE_P(
         EscapeTest{
             "%",
             "",
-            batteries::net::Url::UrlRangeError("%")
+            batteries::net::UrlRangeError("%")
         },
         EscapeTest{
             "%a",
             "",
-            batteries::net::Url::UrlRangeError("%a")
+            batteries::net::UrlRangeError("%a")
         },
         EscapeTest{
             "%1",
             "",
-            batteries::net::Url::UrlRangeError("%1")
+            batteries::net::UrlRangeError("%1")
         },
         EscapeTest{
             "123%45%6",
             "",
-            batteries::net::Url::UrlRangeError("123%45%6")
+            batteries::net::UrlRangeError("123%45%6")
         },
         EscapeTest{
             "%zzzzz",
             "",
-            batteries::net::Url::UrlEscapeError("%zz")
+            batteries::net::UrlEscapeError("%zz")
         },
         EscapeTest{
             "a+b",
@@ -208,6 +214,8 @@ INSTANTIATE_TEST_CASE_P(
         }
     )
 );
+
+// Test escapeQuery
 
 class MultipleEscapeQueryTests : public ::testing::TestWithParam<EscapeTest>{
 
@@ -249,6 +257,8 @@ INSTANTIATE_TEST_CASE_P(
         }
     )
 );
+
+// Test escapePath
 
 class MultipleEscapePathTests : public ::testing::TestWithParam<EscapeTest>{
 
@@ -301,49 +311,52 @@ INSTANTIATE_TEST_CASE_P(
     )
 );
 
-// struct EncodQueryTest{
-//     batteries::net::QueryValues vales;
-//     std::string expected;
-// };
-// class MultipleEncodeQueryTests : public ::testing::TestWithParam<EncodQueryTest>{
+struct ParseHostTest {
+    std::string in;
+    std::string host;
+    std::string port;
+    UrlError err;
+};
 
-// };
+std::ostream & operator<<(std::ostream &os, const ParseHostTest& pht)
+{
+    return os << "in: " << pht.in << ", host: " << pht.host << ", port:" << pht.port;
+}
 
-// TEST_P(MultipleEncodeQueryTests, EscapeQuery) {
-//     std::string path = batteries::net::escapeQuery(GetParam().in);
-//     EXPECT_EQ(GetParam().out, path);
-// }
+class MultipleParseHostTests : public ::testing::TestWithParam<ParseHostTest>{
 
-// INSTANTIATE_TEST_CASE_P(
-//     EscapeTests,
-//     MultipleEncodeQueryTests,
-//     ::testing::Values(
-//         EscapeTest{
-//             "",
-//             "",
-//             batteries::net::UrlNoError
-//         },
-//         EscapeTest{
-//             "abc",
-//             "abc",
-//             batteries::net::UrlNoError
-//         },
-//         EscapeTest{
-//             "one two",
-// 	    	"one+two",
-//             batteries::net::UrlNoError
-//         },
-//         EscapeTest{
-//             "10%",
-// 		    "10%25",
-//             batteries::net::UrlNoError
-//         },
-//         EscapeTest{
-//             " ?&=#+%!<>#\"{}|\\^[]`☺\t:/@$'()*,;",
-// 		    "+%3F%26%3D%23%2B%25%21%3C%3E%23%22%7B%7D%7C%5C%5E%5B%5D%60%E2%98%BA%09%3A%2F%40%24%27%28%29%2A%2C%3B",
-//             batteries::net::UrlNoError
-//         }
-//     )
-// );
+};
+
+TEST_P(MultipleParseHostTests, ParseTests) {
+    std::string host, port;
+    UrlError err;
+    std::tie(host, port, err) = batteries::net::internal::parseHost(GetParam().in);
+    EXPECT_EQ(GetParam().err, err);
+    EXPECT_EQ(GetParam().host, host);
+    EXPECT_EQ(GetParam().port, port);
+}
+
+INSTANTIATE_TEST_CASE_P(
+    ParseHostTest,
+    MultipleParseHostTests,
+    ::testing::Values(
+        ParseHostTest{"foo.com:80", "foo.com", "80", batteries::net::UrlNoError},
+        ParseHostTest{"foo.com", "foo.com", "", batteries::net::UrlNoError},
+		ParseHostTest{"foo.com:", "foo.com", "", batteries::net::UrlNoError},
+		ParseHostTest{"FOO.COM", "FOO.COM", "", batteries::net::UrlNoError}, // no canonicalization
+		ParseHostTest{"1.2.3.4", "1.2.3.4", "", batteries::net::UrlNoError},
+		ParseHostTest{"1.2.3.4:80", "1.2.3.4", "80", batteries::net::UrlNoError},
+		ParseHostTest{"[1:2:3:4]", "1:2:3:4", "", batteries::net::UrlNoError},
+		ParseHostTest{"[1:2:3:4]:80", "1:2:3:4", "80", batteries::net::UrlNoError},
+		ParseHostTest{"[::1]:80", "::1", "80", batteries::net::UrlNoError},
+		ParseHostTest{"[::1]", "::1", "", batteries::net::UrlNoError},
+		ParseHostTest{"[::1]:", "::1", "", batteries::net::UrlNoError},
+		ParseHostTest{"localhost", "localhost", "", batteries::net::UrlNoError},
+		ParseHostTest{"localhost:443", "localhost", "443", batteries::net::UrlNoError},
+		ParseHostTest{"some.super.long.domain.example.org:8080", "some.super.long.domain.example.org", "8080"},
+		ParseHostTest{"[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:17000", "2001:0db8:85a3:0000:0000:8a2e:0370:7334", "17000"},
+		ParseHostTest{"[2001:0db8:85a3:0000:0000:8a2e:0370:7334]", "2001:0db8:85a3:0000:0000:8a2e:0370:7334", ""}
+    )
+);
 
 } // namespace

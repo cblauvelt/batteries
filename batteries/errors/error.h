@@ -15,6 +15,7 @@
 #pragma once
 
 #include <string>
+#include <ostream>
 
 namespace batteries {
 
@@ -44,6 +45,10 @@ public:
 
     explicit operator bool() const {
         return (mErrorCode != static_cast<T>(0));
+    }
+
+    friend std::ostream& operator<< (std::ostream &os, const Error<T>& error) {
+        return os << "error_code: " << (int)error.mErrorCode << ", message: " << error.mMessage;
     }
 
 private:
