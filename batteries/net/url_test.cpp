@@ -514,8 +514,6 @@ class MultipleParseUrlTests : public ::testing::TestWithParam<ParseUrlTest>{
         batteries::net::Url url;
 };
 
-const std::string pathThatLooksSchemeRelative = "//not.a.user@not.a.host/just/a/path";
-
 TEST_P(MultipleParseUrlTests, ParseUrlTests) {
     batteries::net::UrlError err = url.parse(GetParam().in);
     EXPECT_EQ(GetParam().err, err);
@@ -523,7 +521,7 @@ TEST_P(MultipleParseUrlTests, ParseUrlTests) {
     EXPECT_EQ(GetParam().opaque, url.opaque());
     EXPECT_EQ(GetParam().username, url.username());
     EXPECT_EQ(GetParam().password, url.password());
-    EXPECT_EQ(GetParam().host, url.host());
+    EXPECT_EQ(GetParam().host, url.hostname());
     EXPECT_EQ(GetParam().port, url.port());
     EXPECT_EQ(GetParam().path, url.path());
     EXPECT_EQ(GetParam().rawPath, url.rawPath());
@@ -985,5 +983,14 @@ INSTANTIATE_TEST_CASE_P(
         }
     )
 );
+
+TEST(InitTest, InitTest) {
+    std::string urlString = "http://root:password@192.168.1.1:8080/path/to/file#nonsense";
+    batteries::net::Url url1;
+    batteries::net::Url url2(urlString);
+    url1.parse(urlString);
+
+    EXPECT_EQ(url1, url2);
+}
 
 } // namespace
