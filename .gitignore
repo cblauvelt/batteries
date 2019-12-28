@@ -1,3 +1,9 @@
+# Build Directory
+build/
+
+# Test Directory
+Testing/
+
 # Prerequisites
 *.d
 
@@ -30,3 +36,13 @@
 *.exe
 *.out
 *.app
+
+# Development Files
+.devcontainer/**
+.vscode/**
+
+# Conan build files
+conanbuildinfo.cmake
+conanbuildinfo.txt
+conaninfo.txt
+graph_info.json
