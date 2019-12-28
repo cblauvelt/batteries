@@ -21,6 +21,12 @@ namespace batteries {
 
 namespace strings {
 
+/**
+ * @brief count counts the number of times searchTerm appears in s.
+ * @param s A string that is to be searched.
+ * @param searchTerm The term that will be searched for in s.
+ * @returns The number of times searchTerm appears in s.
+ */
 unsigned int count(absl::string_view s, absl::string_view searchTerm) {
 	unsigned int charCount = 0;
 	auto startSearch = s.find(searchTerm, 0);
@@ -37,8 +43,13 @@ unsigned int count(absl::string_view s, absl::string_view searchTerm) {
 	return charCount;
 }
 
-bool containsCtlByte(absl::string_view rawurl) {
-	for(auto c : rawurl) {
+/**
+ * @brief containsCtlChar searched candidate for a control character.
+ * @param candidate The string to search for control characters.
+ * @returns true if candidate contains a control character, otherwise false.
+ */
+bool containsCtlChar(absl::string_view candidate) {
+	for(auto c : candidate) {
 		if(absl::ascii_iscntrl(c)) { return true; }
 	}
 

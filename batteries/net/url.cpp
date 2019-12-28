@@ -293,7 +293,7 @@ UrlError Url::parse(absl::string_view rawurl, bool viaRequest) {
 	absl::string_view rest;
 	UrlError err;
 
-	if(strings::containsCtlByte(rawurl)) {
+	if(strings::containsCtlChar(rawurl)) {
 		return UrlParseError("invalid control character in URL");
 	}
 
