@@ -75,6 +75,22 @@ Url::Url() :
     mFragment()
 {}
 
+
+Url::Url(std::string rawurl) :
+    mScheme(),
+	mOpaque(),
+    mUsername(),
+    mPassword(),
+    mHost(),
+	mPort(),
+    mPath(),
+    mRawPath(),
+	mQuery(),
+    mFragment()
+{
+	parse(rawurl);
+}
+
 UrlError Url::parse(absl::string_view rawUrl) {
 	return parse(rawUrl, false);
 }
@@ -115,13 +131,25 @@ void Url::setPassword(std::string password) {
 }
 
 std::string Url::host() const {
-	return mHost;
+	if(!mPort.empty()) {
+		return absl::StrCat(mHost, ":", mPort);
+	}
+
+	return mHost;	
 }
 
 UrlError Url::setHost(std::string host) {
 	UrlError err;
 	std::tie(mHost, mPort, err) = internal::parseHost(host);
 	return err;
+}
+
+std::string Url::hostname() const {
+	return mHost;
+}
+
+void Url::setHostname(std::string hostname) {
+	mHost = hostname;
 }
 
 std::string Url::port() const {
@@ -166,11 +194,12 @@ void Url::setQuery(const Query& query) {
 }
 
 std::string Url::fragment() const {
-	return mFragment;
+	return internal::escape(mFragment, internal::encoding::encodeFragment);
 }
 
-void Url::setFragment(std::string fragment) {
-	mFragment = fragment;
+UrlError Url::setFragment(std::string fragment) {
+	UrlError err;
+	std::tie(mFragment, err) = internal::unescape(fragment, internal::encoding::encodeFragment);
 }
 
 // Conveniance functions
@@ -265,7 +294,7 @@ std::string Url::escapedQuery() const {
     return internal::escape(query, internal::encoding::encodeQueryComponent);
 }
 
-bool Url::operator==(const Url& rhs) {
+bool Url::operator==(const Url& rhs) const {
 	return (
 		mScheme == rhs.mScheme &&
 		mOpaque == rhs.mOpaque &&
@@ -280,15 +309,10 @@ bool Url::operator==(const Url& rhs) {
 	);
 }
 
-bool Url::operator!=(const Url& rhs) {
+bool Url::operator!=(const Url& rhs) const {
 	return !(*this == rhs);
 }
 
-/** parse parses a URL from a string in one of two contexts. If
- * viaRequest is true, the URL is assumed to have arrived via an HTTP request,
- * in which case only absolute URLs or path-absolute relative URLs are allowed.
- * If viaRequest is false, all forms of relative URLs are allowed.
- */
 UrlError Url::parse(absl::string_view rawurl, bool viaRequest) {
 	absl::string_view rest;
 	UrlError err;

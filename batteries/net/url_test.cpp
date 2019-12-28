@@ -485,6 +485,7 @@ struct ParseUrlTest {
     std::string username;
     std::string password;
     std::string host;
+    std::string hostname;
     std::string port;
     std::string path;
     std::string rawPath;
@@ -501,6 +502,7 @@ std::ostream & operator<<(std::ostream &os, const ParseUrlTest& pt)
               << ", username: " << pt.username
               << ", password: " << pt.password
               << ", host: " << pt.host
+              << ", hostname: " << pt.hostname
               << ", port: " << pt.port
               << ", path: " << pt.path
               << ", rawPath: " << pt.rawPath
@@ -514,8 +516,6 @@ class MultipleParseUrlTests : public ::testing::TestWithParam<ParseUrlTest>{
         batteries::net::Url url;
 };
 
-const std::string pathThatLooksSchemeRelative = "//not.a.user@not.a.host/just/a/path";
-
 TEST_P(MultipleParseUrlTests, ParseUrlTests) {
     batteries::net::UrlError err = url.parse(GetParam().in);
     EXPECT_EQ(GetParam().err, err);
@@ -524,6 +524,7 @@ TEST_P(MultipleParseUrlTests, ParseUrlTests) {
     EXPECT_EQ(GetParam().username, url.username());
     EXPECT_EQ(GetParam().password, url.password());
     EXPECT_EQ(GetParam().host, url.host());
+    EXPECT_EQ(GetParam().hostname, url.hostname());
     EXPECT_EQ(GetParam().port, url.port());
     EXPECT_EQ(GetParam().path, url.path());
     EXPECT_EQ(GetParam().rawPath, url.rawPath());
@@ -542,6 +543,7 @@ INSTANTIATE_TEST_CASE_P(
             "",
             "",
             "foo.com",
+            "foo.com",
             "",
             "",
             "",
@@ -555,6 +557,7 @@ INSTANTIATE_TEST_CASE_P(
             "",
             "",
             "",
+            "foo.com",
             "foo.com",
             "",
             "/",
@@ -570,6 +573,7 @@ INSTANTIATE_TEST_CASE_P(
             "",
             "",
             "foo.com",
+            "foo.com",
             "",
             "/path",
             "",
@@ -583,6 +587,7 @@ INSTANTIATE_TEST_CASE_P(
             "",
             "",
             "",
+            "foo.com",
             "foo.com",
             "",
             "/path escaped",
@@ -598,6 +603,7 @@ INSTANTIATE_TEST_CASE_P(
             "",
             "",
             "foo.com",
+            "foo.com",
             "",
             "/path",
             "",
@@ -612,6 +618,7 @@ INSTANTIATE_TEST_CASE_P(
             "", // username
             "", // password
             "", // host
+            "", // hostname
             "", // port
             "/", // path
             "", // rawPath
@@ -626,6 +633,7 @@ INSTANTIATE_TEST_CASE_P(
             "", // username
             "", // password
             "", // host
+            "", // hostname
             "", // port
             "*", // path
             "", // rawPath
@@ -639,7 +647,8 @@ INSTANTIATE_TEST_CASE_P(
             "", // opaque
             "", // username
             "", // password
-            "192.168.0.1", // host
+            "192.168.0.1:8080", // host
+            "192.168.0.1", // hostname
             "8080", // port
             "/", // path
             "", // rawPath
@@ -653,7 +662,8 @@ INSTANTIATE_TEST_CASE_P(
             "", // opaque
             "", // username
             "", // password
-            "192.168.0.1", // host
+            "192.168.0.1:8080", // host
+            "192.168.0.1", // hostname
             "8080", // port
             "/", // path
             "", // rawPath
@@ -668,6 +678,7 @@ INSTANTIATE_TEST_CASE_P(
             "", // username
             "", // password
             "[fe80::1]", // host
+            "[fe80::1]", // hostname
             "", // port
             "/", // path
             "", // rawPath
@@ -681,7 +692,8 @@ INSTANTIATE_TEST_CASE_P(
             "", // opaque
             "", // username
             "", // password
-            "[fe80::1]", // host
+            "[fe80::1]:8080", // host
+            "[fe80::1]", // hostname
             "8080", // port
             "/", // path
             "", // rawPath
@@ -695,7 +707,8 @@ INSTANTIATE_TEST_CASE_P(
             "", // opaque
             "", // username
             "", // password
-            "[fe80::1]", // host
+            "[fe80::1]:8080", // host
+            "[fe80::1]", // hostname
             "8080", // port
             "/", // path
             "", // rawPath
@@ -709,6 +722,7 @@ INSTANTIATE_TEST_CASE_P(
             "",
             "root",
             "password",
+            "192.168.1.1:8080",
             "192.168.1.1",
             "8080",
             "/path/to/file",
@@ -724,6 +738,7 @@ INSTANTIATE_TEST_CASE_P(
             "", // username
             "", // password
             "[fe80::1%en0]", // host
+            "[fe80::1%en0]", // hostname
             "", // port
             "/", // path
             "", // rawPath
@@ -737,7 +752,8 @@ INSTANTIATE_TEST_CASE_P(
             "", // opaque
             "", // username
             "", // password
-            "[fe80::1%en0]", // host
+            "[fe80::1%en0]:8080", // host
+            "[fe80::1%en0]", // hostname
             "8080", // port
             "/", // path
             "", // rawPath
@@ -752,6 +768,7 @@ INSTANTIATE_TEST_CASE_P(
             "", // username
             "", // password
             "[fe80::1%en01-._~]", // host
+            "[fe80::1%en01-._~]", // hostname
             "", // port
             "/", // path
             "", // rawPath
@@ -765,7 +782,8 @@ INSTANTIATE_TEST_CASE_P(
             "", // opaque
             "", // username
             "", // password
-            "[fe80::1%en01-._~]", // host
+            "[fe80::1%en01-._~]:8080", // host
+            "[fe80::1%en01-._~]", // hostname
             "8080", // port
             "/", // path
             "", // rawPath
@@ -780,6 +798,7 @@ INSTANTIATE_TEST_CASE_P(
             "", // username
             "", // password
             "", // host
+            "", // hostname
             "", // port
             "", // path
             "", // rawPath
@@ -794,6 +813,7 @@ INSTANTIATE_TEST_CASE_P(
             "", // username
             "", // password
             "", // host
+            "", // hostname
             "", // port
             "", // path
             "", // rawPath
@@ -808,6 +828,7 @@ INSTANTIATE_TEST_CASE_P(
             "", // username
             "", // password
             "", // host
+            "", // hostname
             "", // port
             "", // path
             "", // rawPath
@@ -822,6 +843,7 @@ INSTANTIATE_TEST_CASE_P(
             "", // username
             "", // password
             "", // host
+            "", // hostname
             "", // port
             "", // path
             "", // rawPath
@@ -836,6 +858,7 @@ INSTANTIATE_TEST_CASE_P(
             "", // username
             "", // password
             "", // host
+            "", // hostname
             "", // port
             "", // path
             "", // rawPath
@@ -850,6 +873,7 @@ INSTANTIATE_TEST_CASE_P(
             "", // username
             "", // password
             "", // host
+            "", // hostname
             "", // port
             "", // path
             "", // rawPath
@@ -864,6 +888,7 @@ INSTANTIATE_TEST_CASE_P(
             "", // username
             "", // password
             "", // host
+            "", // hostname
             "", // port
             "", // path
             "", // rawPath
@@ -878,6 +903,7 @@ INSTANTIATE_TEST_CASE_P(
             "", // username
             "", // password
             "", // host
+            "", // hostname
             "", // port
             "", // path
             "", // rawPath
@@ -896,6 +922,7 @@ INSTANTIATE_TEST_CASE_P(
             "", // username
             "", // password
             "", // host
+            "", // hostname
             "", // port
             "", // path
             "", // rawPath
@@ -910,6 +937,7 @@ INSTANTIATE_TEST_CASE_P(
             "", // username
             "", // password
             "", // host
+            "", // hostname
             "", // port
             "", // path
             "", // rawPath
@@ -985,5 +1013,14 @@ INSTANTIATE_TEST_CASE_P(
         }
     )
 );
+
+TEST(InitTest, InitTest) {
+    std::string urlString = "http://root:password@192.168.1.1:8080/path/to/file#nonsense";
+    batteries::net::Url url1;
+    batteries::net::Url url2(urlString);
+    url1.parse(urlString);
+
+    EXPECT_EQ(url1, url2);
+}
 
 } // namespace
