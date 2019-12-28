@@ -33,6 +33,12 @@ class BatteriesConan(ConanFile):
     generators = "cmake"
     settings = "os", "arch", "compiler", "build_type"
     requires = "abseil/master@bincrafters/stable"
+    options = {"cxx_standard": [11, 14, 17], "build_testing": [True, False], "fPIC" : [True, False]}
+    default_options = {"cxx_standard": 11, "build_testing": False, "fPIC": True}
+    
+    def config_options(self):
+        if self.settings.os == "Windows":
+            del self.options.fPIC
 
     def configure(self):
         if self.settings.os == "Windows" and \
@@ -46,7 +52,8 @@ class BatteriesConan(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.definitions["BUILD_TESTING"] = False
+        cmake.definitions["BUILD_TESTING"] = self.options.build_testing
+        cmake.definitions["CMAKE_CXX_STANDARD"] = self.options.cxx_standard
         cmake.configure()
         cmake.build()
 
