@@ -17,6 +17,7 @@
 #include <algorithm>
 
 #include <absl/strings/str_split.h>
+#include <absl/strings/str_cat.h>
 
 namespace batteries {
 
@@ -38,6 +39,18 @@ Query::Query(std::string query) :
 	parse(query);
 }
 
+Query::Query(const QueryValues& values) :
+	mQuery(),
+	mRawQuery(),
+	mForceQuery(false),
+	mRawQueryDirty(false)
+{
+	for(auto& value : values) {
+		mQuery.emplace(value);
+	}
+	mRawQuery = internal::buildQuery(values.cbegin(), values.cend());
+}
+
 UrlError Query::parse(std::string query) {
 	mRawQuery = std::move(query);
 	mQuery.clear();
@@ -48,12 +61,21 @@ UrlError Query::parse(std::string query) {
 	}
 }
 
-std::string Query::toString() {
+std::string Query::toString() const {
 	if(mRawQueryDirty) { // Rebuild raw query
-		mRawQuery = internal::buildQuery(mQuery.cbegin(), mQuery.cend());
-		mRawQueryDirty = false;
+		const_cast<Query*>(this)->mRawQuery = internal::buildQuery(mQuery.cbegin(), mQuery.cend());
+		const_cast<Query*>(this)->mRawQueryDirty = false;
 	}
-	return mRawQuery;
+
+	if(mRawQuery.empty() ) {
+		// if forced return the question mark
+		if(mForceQuery) { return "?"; }
+		// return empty string
+		return mRawQuery;
+	}
+	
+	// Return with question mark
+	return absl::StrCat("?", mRawQuery);
 }
 
 void Query::setForceQuery(bool force) {
@@ -99,6 +121,22 @@ QueryValues Query::get(std::string key) const {
 	while(it != mQuery.end()) {
 		values.push_back(*it++);
 	}
+}
+
+bool Query::empty() const {
+	return mQuery.empty();
+}
+
+std::size_t Query::size() const {
+	return mQuery.size();
+}
+
+bool Query::operator==(const Query& rhs) const {
+	return (mQuery == rhs.mQuery);
+}
+
+bool Query::operator!=(const Query& rhs) const {
+	return !(*this == rhs);
 }
 
 }

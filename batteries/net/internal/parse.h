@@ -14,7 +14,13 @@
 
 #pragma once
 
+#include <sstream>
+
+#include <absl/strings/str_cat.h>
+
 #include "batteries/net/base.h"
+
+#include "escape.h"
 
 namespace batteries {
 
@@ -55,16 +61,32 @@ bool validOptionalPort(absl::string_view port);
 bool validUserinfo(absl::string_view s);
 
 /**
+ * @brief Takes a raw url that may contain the form path?query#fragment
+ * and removes the fragment.
+ * @param rawurl The url that may contain a fragment section.
+ * @returns If there is a fragment found, returns fragment,path; else "",rawurl.
+ */
+std::tuple<std::string, absl::string_view, UrlError>
+parseFragment(absl::string_view rawurl);
+
+/**
  * @brief Takes a raw url that may contain the form scheme:path
  * and breaks it down into it's component parts.
  * @param rawurl The url that may contain a scheme section.
  * @returns If there is a scheme found, returns scheme,path; else "",rawurl.
  */
-std::tuple<absl::string_view, absl::string_view, UrlError>
+std::tuple<std::string, absl::string_view, UrlError>
 parseScheme(absl::string_view rawurl);
 
-// UrlError parse(absl::string_view rawUrl, bool viaRequest);
-// UrlError parseAuthority(absl::string_view authority);
+/**
+ * @brief parseAuthority takes a string of form [userinfo@]host] and returns
+ * The username and password, if any, and the string_view to pass on to parseHost.
+ * 
+ * @param authority a string_view of the form [userinfo@]host].
+ * @returns The username, password, and the host portion of the input.
+ */
+std::tuple<std::string, std::string, absl::string_view,UrlError>
+parseAuthority(absl::string_view authority);
 
 /**
  * @brief parseHost parses the portion of the URL that contains the DNS or IP
@@ -88,7 +110,20 @@ parseQuery(absl::string_view query);
  * @param begin A const_iterator to the begining of the values.
  * @param end A const_iterator to the end of the values.
  */
-std::string buildQuery(QueryMap::const_iterator begin, QueryMap::const_iterator end);
+template<typename T>
+std::string buildQuery(T begin, T end) {
+    std::ostringstream buf;
+    for(auto it = begin; it != end; ++it) {
+        auto key = escape(it->first, encoding::encodeQueryComponent);
+        auto value = escape(it->second, encoding::encodeQueryComponent);
+        buf << absl::StrCat(key, "=", value, "&");
+    }
+
+    std::string retVal = buf.str();
+    // Remove the last &
+    retVal.pop_back();
+    return retVal;
+}
 
 }
 

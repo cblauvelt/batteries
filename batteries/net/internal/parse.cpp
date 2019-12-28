@@ -22,15 +22,12 @@ SOFTWARE.
 */
 
 #include <tuple>
-#include <sstream>
 
 #include <absl/strings/ascii.h>
-#include <absl/strings/str_cat.h>
 #include <absl/strings/str_split.h>
 #include <absl/strings/match.h>
 
 #include "parse.h"
-#include "escape.h"
 
 namespace batteries {
 
@@ -70,10 +67,10 @@ bool validOptionalPort(absl::string_view port) {
 
 bool validUserinfo(absl::string_view s) {
 	for(auto c : s) {
-		if(!absl::ascii_isalnum(c) || c != '-' || c!= '.' || c!= '_' ||
-			c!= ':' || c!= '~' || c!= '!' || c!= '$' || c!= '&' ||
-			c!= '\'' || c!= '(' || c!= ')' || c!= '*' ||
-			c!= '+' || c!= ',' || c!= ';' || c!= '=' || c!= '%' || c!= '@')
+		if(!absl::ascii_isalnum(c) && c != '-' && c!= '.' && c!= '_' &&
+			c!= ':' && c!= '~' && c!= '!' && c!= '$' && c!= '&' &&
+			c!= '\'' && c!= '(' && c!= ')' && c!= '*' &&
+			c!= '+' && c!= ',' && c!= ';' && c!= '=' && c!= '%' && c!= '@')
 		{
 			return false;
 		}
@@ -82,7 +79,39 @@ bool validUserinfo(absl::string_view s) {
 	return true;
 }
 
-std::tuple<absl::string_view, absl::string_view, UrlError> parseScheme(absl::string_view rawurl) {
+std::tuple<std::string, absl::string_view, UrlError>
+parseFragment(absl::string_view rawurl) {
+    std::string fragment;
+    absl::string_view fragment_view, rest;
+    UrlError err;
+    
+	std::tie(rest, fragment_view) = split(rawurl, "#", true);
+    if(fragment_view.empty()) {
+        return std::make_tuple(
+            fragment,
+            rest,
+            err
+        );
+    }
+
+    std::tie(fragment, err) = unescape(fragment_view, encoding::encodeFragment);
+    if(err != UrlNoError) {
+        return std::make_tuple(
+            std::string(),
+            rest,
+            err
+        );
+    }
+
+    return std::make_tuple(
+        fragment,
+        rest,
+        err
+    );
+}
+
+std::tuple<std::string, absl::string_view, UrlError>
+parseScheme(absl::string_view rawurl) {
 	for(int i = 0; i < rawurl.length(); i++) {
 		byte c = rawurl[i];
 		if(absl::ascii_isalpha(c)) { continue;} // do nothing
@@ -90,7 +119,7 @@ std::tuple<absl::string_view, absl::string_view, UrlError> parseScheme(absl::str
         if(absl::ascii_isdigit(c) || c == '+' || c == '-' || c == '.') {
 			if(i == 0) {
 				return std::make_tuple(
-                    absl::string_view(),
+                    "",
                     rawurl,
                     UrlNoError
                 );
@@ -99,13 +128,13 @@ std::tuple<absl::string_view, absl::string_view, UrlError> parseScheme(absl::str
 		if(c == ':') {
 			if(i == 0) {
 				return std::make_tuple(
-                    absl::string_view(),
+                    "",
                     absl::string_view(),
                     UrlParseError("missing protocol scheme")
                 );
 			}
             return std::make_tuple(
-                rawurl.substr(0,i),
+                (std::string)rawurl.substr(0,i),
                 rawurl.substr(i+1),
                 UrlNoError
             );
@@ -114,11 +143,84 @@ std::tuple<absl::string_view, absl::string_view, UrlError> parseScheme(absl::str
         // we have encountered an invalid character,
         // so there is no valid scheme
         return std::make_tuple(
-            absl::string_view(), rawurl, UrlNoError
+            "", rawurl, UrlNoError
         );
 	}
     return std::make_tuple(
-        absl::string_view(), rawurl, UrlNoError
+        "", rawurl, UrlNoError
+    );
+}
+
+std::tuple<std::string, std::string, absl::string_view,UrlError>
+parseAuthority(absl::string_view authority) {
+	auto i = authority.rfind('@');
+	
+    if(i == authority.npos) {
+		return std::make_tuple(
+            "",
+            "",
+            authority,
+            UrlNoError
+        );
+	}
+
+	absl::string_view userinfo = authority.substr(0,i);
+
+	if(!internal::validUserinfo(userinfo)) {
+		return std::make_tuple(
+            "",
+            "",
+            absl::string_view(),
+            UrlParseError("invalid userinfo")
+        );
+	}
+
+    // Return values
+    std::string username;
+    std::string password;
+    absl::string_view host = authority.substr(i+1);
+	UrlError err;
+
+    // Has no password
+	if(!absl::StrContains(userinfo, ":")) {
+		std::tie(userinfo, err) = unescape(userinfo, internal::encoding::encodeUserPassword);
+		if(err != UrlNoError) {
+			return std::make_tuple(
+                "",
+                "",
+                host,
+                err
+            );
+		}
+		username = (std::string)userinfo;
+	} else { // Has password
+        absl::string_view username_view;
+        absl::string_view password_view;
+		std::tie(username_view, password_view) = internal::split(userinfo, ":", true);
+		std::tie(username, err) = unescape(username_view, internal::encoding::encodeUserPassword);
+		if(err != UrlNoError) {
+			return std::make_tuple(
+                "",
+                "",
+                host,
+                err
+            );
+		}
+		std::tie(password, err) = unescape(password_view, internal::encoding::encodeUserPassword);
+		if(err != UrlNoError) {
+			return std::make_tuple(
+                "",
+                "",
+                host,
+                err
+            );
+		}
+	}
+	return std::make_tuple(
+        username,
+        password,
+        host,
+        err
     );
 }
 
@@ -154,7 +256,7 @@ std::tuple<std::string, std::string, UrlError> parseHost(absl::string_view host)
         }
 
         // Remove port information and '[]' from the host
-        host = host.substr(1, i-1);
+        host = host.substr(0, i+1);
 
 		// RFC 6874 defines that %25 (%-encoded percent) introduces
 		// the zone identifier, and the zone identifier can use basically
@@ -183,15 +285,13 @@ std::tuple<std::string, std::string, UrlError> parseHost(absl::string_view host)
                     err
                 );
 			}
-			std::tie(host3, err) = unescape(host.substr(i), internal::encoding::encodeHost);
-			if(err != UrlNoError) {
-				return std::make_tuple(
-                    "",
-                    "",
-                    err
-                );
-			}
-			hostString = absl::StrCat(host1, host2, host3);
+            hostString = absl::StrCat(host1, host2);
+
+            return std::make_tuple(
+                hostString,
+                portString,
+                UrlNoError
+            );
 		}
 	} else {
 
@@ -267,20 +367,6 @@ parseQuery(absl::string_view query) {
 	
 
 	return std::make_tuple(map, err);
-}
-
-std::string buildQuery(QueryMap::const_iterator begin, QueryMap::const_iterator end) {
-    std::ostringstream buf;
-    for(auto it = begin; it != end; ++it) {
-        auto key = escape(it->first, encoding::encodeQueryComponent);
-        auto value = escape(it->second, encoding::encodeQueryComponent);
-        buf << absl::StrCat(key, "=", value, "&");
-    }
-
-    std::string retVal = buf.str();
-    // Remove the last &
-    retVal.pop_back();
-    return retVal;
 }
 
 }

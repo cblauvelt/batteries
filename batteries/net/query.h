@@ -33,7 +33,8 @@ class Query {
 
 public:
     Query();
-    Query(std::string);
+    Query(std::string query);
+    Query(const QueryValues& values);
 
     /**
      * @brief parse parses the URL-encoded query string and returns
@@ -54,7 +55,7 @@ public:
      * @brief toString returns the query in raw string form.
      * @returns The query in raw string form.
      */
-    std::string toString();
+    std::string toString() const;
 
     /**
      * @brief setForceQuery Allows the user to force a null query when the query
@@ -77,6 +78,13 @@ public:
     void del(std::string key);
     QueryValues values() const;
     QueryValues get(std::string key) const;
+
+    bool empty() const;
+    std::size_t size() const;
+
+    // Operators
+    bool operator==(const Query& rhs) const;
+    bool operator!=(const Query& rhs) const;
 
 private:    
     std::multimap<std::string,std::string> mQuery;

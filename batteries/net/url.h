@@ -30,11 +30,14 @@ namespace batteries {
 
 namespace net {
 
+class Url;
+
 // Free Functions
 std::tuple<std::string, UrlError> unescapePath(absl::string_view path);
 std::tuple<std::string, UrlError> unescapeQuery(absl::string_view query);
 std::string escapePath(absl::string_view path);
 std::string escapeQuery(absl::string_view query);
+Url ResolveReference(Url url);
 
 /**
  * A Url is a parsed URL/URI. The general form is "[scheme:][//[userinfo@]host][/]path[?query][#fragment]"
@@ -93,13 +96,41 @@ public:
     bool hasPassword() const;
 
     // Conversion functions
+
+    /**
+     * @brief String reassembles the URL into a valid URL string.
+     * The general form of the result is one of:
+     *
+     *	scheme:opaque?query#fragment
+     *	scheme://userinfo@host/path?query#fragment
+     *
+     * If opaque() is non-empty, toString uses the first form;
+     * otherwise it uses the second form.
+     * Any non-ASCII characters in host are escaped.
+     * To obtain the path, String uses escapedPath().
+     *
+     * In the second form, the following rules apply:
+     *	- if Scheme is empty, scheme: is omitted.
+     *	- if User is nil, userinfo@ is omitted.
+     *	- if Host is empty, host/ is omitted.
+     *	- if Scheme and u.Host are empty and u.User is nil,
+     *	   the entire scheme://userinfo@host/ is omitted.
+     *	- if Host is non-empty and u.Path begins with a /,
+     *	   the form host/path does not add its own /.
+     *	- if RawQuery is empty, ?query is omitted.
+     *	- if Fragment is empty, #fragment is omitted.
+     */
     std::string toString() const;
+    std::string requestUri() const;
     std::string escapedPath() const;
     std::string escapedQuery() const;
 
+    // Operators
+    bool operator==(const Url& rhs);
+    bool operator!=(const Url& rhs);
+
 private:
     UrlError parse(absl::string_view rawUrl, bool viaRequest);
-    UrlError parseAuthority(absl::string_view authority);
 
 private:
     std::string mScheme;

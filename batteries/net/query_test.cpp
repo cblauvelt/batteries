@@ -88,12 +88,13 @@ INSTANTIATE_TEST_CASE_P(
     )
 );
 
-// Test parseValues
+// Test get string
 
 struct BuildQueryTest{
     std::string query;
     QueryMap map;
 };
+
 class MultipleBuildQueryTests : public ::testing::TestWithParam<BuildQueryTest>{
 
 };
@@ -119,6 +120,41 @@ INSTANTIATE_TEST_CASE_P(
         },BuildQueryTest{
             "a=1&a=2&a=banana&ba=1&ba=2&ba=banana",
             QueryMap{{"a", "1"}, {"a", "2"}, {"a", "banana"}, {"ba", "1"}, {"ba", "2"}, {"ba", "banana"}}
+        }
+    )
+);
+
+// Test parseValues
+struct InitialValuesTest{
+    std::string query;
+    batteries::net::QueryValues values;
+};
+
+class MultipleInitialValuesTests : public ::testing::TestWithParam<InitialValuesTest>{
+
+};
+
+TEST_P(MultipleInitialValuesTests, EscapeQuery) {
+    batteries::net::Query query(GetParam().values);
+    EXPECT_EQ(GetParam().query, query.toString());
+}
+
+INSTANTIATE_TEST_CASE_P(
+    QueryTests,
+    MultipleInitialValuesTests,
+    ::testing::Values(
+        InitialValuesTest{
+            "?a=1&b=2",
+            batteries::net::QueryValues{{"a", "1"}, {"b", "2"}}
+        },InitialValuesTest{
+            "?a=1&a=2&a=banana",
+            batteries::net::QueryValues{{"a", "1"}, {"a", "2"}, {"a", "banana"}}
+        },InitialValuesTest{
+            "?ascii=%3Ckey%3A+0x90%3E",
+            batteries::net::QueryValues{{"ascii", "<key: 0x90>"}}
+        },InitialValuesTest{
+            "?a=1&a=2&a=banana&ba=1&ba=2&ba=banana",
+            batteries::net::QueryValues{{"a", "1"}, {"a", "2"}, {"a", "banana"}, {"ba", "1"}, {"ba", "2"}, {"ba", "banana"}}
         }
     )
 );
