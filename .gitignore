@@ -38,8 +38,8 @@ Testing/
 *.app
 
 # Development Files
-.devcontainer/**
-.vscode/**
+.devcontainer
+.vscode
 
 # Conan build files
 conanbuildinfo.cmake
