@@ -19,11 +19,11 @@
 
 namespace {
 
-TEST(Errors, DefaultError)
-{
+TEST(Errors, DefaultError) {
     std::string errorMessage = "Test Message";
     batteries::errors::Error<> error;
-    batteries::errors::Error<> errorWithMessage(batteries::errors::GenericErrorCode::GenericError, errorMessage);
+    batteries::errors::Error<> errorWithMessage(
+        batteries::errors::GenericErrorCode::GenericError, errorMessage);
 
     EXPECT_EQ(error, batteries::errors::NoError);
     EXPECT_FALSE(error);
@@ -31,21 +31,18 @@ TEST(Errors, DefaultError)
 
     EXPECT_EQ(errorWithMessage.message(), errorWithMessage.what());
     EXPECT_EQ(errorWithMessage.message(), errorMessage);
-    EXPECT_EQ(errorWithMessage.errorCode(), batteries::errors::GenericErrorCode::GenericError);
+    EXPECT_EQ(errorWithMessage.errorCode(),
+              batteries::errors::GenericErrorCode::GenericError);
     EXPECT_TRUE(errorWithMessage);
     EXPECT_FALSE(!errorWithMessage);
 }
 
-TEST(Errors, CustomError)
-{
-    enum class CustomErrorCode {
-        NoError = 0,
-        BadError,
-        ThisIsUnneccesary
-    };
+TEST(Errors, CustomError) {
+    enum class CustomErrorCode { NoError = 0, BadError, ThisIsUnneccesary };
     std::string errorMessage = "Test Message";
     batteries::errors::Error<CustomErrorCode> error;
-    batteries::errors::Error<CustomErrorCode> errorWithMessage(CustomErrorCode::BadError, errorMessage);
+    batteries::errors::Error<CustomErrorCode> errorWithMessage(
+        CustomErrorCode::BadError, errorMessage);
 
     EXPECT_EQ(error.errorCode(), CustomErrorCode::NoError);
     EXPECT_FALSE(error);

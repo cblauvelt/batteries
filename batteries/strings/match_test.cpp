@@ -19,18 +19,17 @@
 
 namespace {
 
-TEST(Strings, Contains)
-{
-    std::string testString = "Why? Why does this string contain two question marks?";
+TEST(Strings, Contains) {
+    std::string testString =
+        "Why? Why does this string contain two question marks?";
     EXPECT_EQ(0, batteries::strings::count(testString, "x"));
     EXPECT_EQ(2, batteries::strings::count(testString, "?"));
     EXPECT_EQ(2, batteries::strings::count(testString, "Why"));
-
 }
 
-TEST(Strings, ContainsControlChar)
-{
-    std::string testString = "Why is this text so far to the right? \t\t\t\t\t text";
+TEST(Strings, ContainsControlChar) {
+    std::string testString =
+        "Why is this text so far to the right? \t\t\t\t\t text";
     EXPECT_TRUE(batteries::strings::containsCtlChar(testString));
     testString = "No control chars";
     EXPECT_FALSE(batteries::strings::containsCtlChar(testString));
