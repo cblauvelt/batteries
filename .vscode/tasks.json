@@ -1,0 +1,41 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Conan Install",
+            "type": "shell",
+            "command": "cd build && conan install ..",
+            "problemMatcher": []
+        },
+        {
+            "label": "Compile",
+            "type": "shell",
+            "command": "cmake --build build/",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "CTest",
+            "type": "shell",
+            "command": "ctest -C Release -T test --output-on-failure --timeout 10 --test-dir build/",
+            "problemMatcher": [],
+        },
+        {
+            "label": "Clear Build",
+            "type": "shell",
+            "command": "rm -rf build/*",
+            "problemMatcher": []
+        },
+        {
+            "label": "Conan Create",
+            "type": "shell",
+            "command": "conan create .",
+            "problemMatcher": []
+        },
+    ]
+}

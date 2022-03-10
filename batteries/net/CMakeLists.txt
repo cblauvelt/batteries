@@ -47,5 +47,4 @@ batteries_cc_test(
 	DEPS
 		batteries::net
 		${CONAN_LIBS}
-		gmock_main
 )

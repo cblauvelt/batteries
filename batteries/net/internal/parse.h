@@ -15,6 +15,8 @@
 #pragma once
 
 #include <sstream>
+#include <string>
+#include <string_view>
 
 #include <absl/strings/str_cat.h>
 
@@ -31,22 +33,24 @@ namespace internal {
 using QueryMap = std::multimap<std::string, std::string>;
 
 /**
- * @brief splits a string into two and only two parts at "match". If cutMatch is true, the delimiter is consumed.
+ * @brief splits a string into two and only two parts at "match". If cutMatch is
+ * true, the delimiter is consumed.
  * @param s The string to split.
  * @param match The delimiter to search for and split if present.
  * @param cutMatch If true, the delimiter is consumed.
  */
-std::tuple<absl::string_view, absl::string_view> split(absl::string_view s, absl::string_view match, bool cutMatch);
+std::tuple<std::string_view, std::string_view>
+split(std::string_view s, std::string_view match, bool cutMatch);
 
 /**
  * @brief Determine if the port, if present, is a valid port number
  * @param port A string_view substring of the port portion of the URL.
  */
-bool validOptionalPort(absl::string_view port);
+bool validOptionalPort(std::string_view port);
 
 /**
  * @brief reports whether s is a valid userinfo string per RFC 3986
- * 
+ *
  * Section 3.2.1:
  *     userinfo    = *( unreserved / pct-encoded / sub-delims / ":" )
  *     unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
@@ -54,11 +58,11 @@ bool validOptionalPort(absl::string_view port);
  *                   / "*" / "+" / "," / ";" / "="
  *
  * It doesn't validate pct-encoded. The caller does that via func unescape.
- * 
+ *
  * @param s A string that reperesents the user info contained within a URL.
  * Usually of the form "username:password"
  */
-bool validUserinfo(absl::string_view s);
+bool validUserinfo(std::string_view s);
 
 /**
  * @brief Takes a raw url that may contain the form path?query#fragment
@@ -66,8 +70,8 @@ bool validUserinfo(absl::string_view s);
  * @param rawurl The url that may contain a fragment section.
  * @returns If there is a fragment found, returns fragment,path; else "",rawurl.
  */
-std::tuple<std::string, absl::string_view, UrlError>
-parseFragment(absl::string_view rawurl);
+std::tuple<std::string, std::string_view, UrlError>
+parseFragment(std::string_view rawurl);
 
 /**
  * @brief Takes a raw url that may contain the form scheme:path
@@ -75,18 +79,19 @@ parseFragment(absl::string_view rawurl);
  * @param rawurl The url that may contain a scheme section.
  * @returns If there is a scheme found, returns scheme,path; else "",rawurl.
  */
-std::tuple<std::string, absl::string_view, UrlError>
-parseScheme(absl::string_view rawurl);
+std::tuple<std::string, std::string_view, UrlError>
+parseScheme(std::string_view rawurl);
 
 /**
  * @brief parseAuthority takes a string of form [userinfo@]host] and returns
- * The username and password, if any, and the string_view to pass on to parseHost.
- * 
+ * The username and password, if any, and the string_view to pass on to
+ * parseHost.
+ *
  * @param authority a string_view of the form [userinfo@]host].
  * @returns The username, password, and the host portion of the input.
  */
-std::tuple<std::string, std::string, absl::string_view,UrlError>
-parseAuthority(absl::string_view authority);
+std::tuple<std::string, std::string, std::string_view, UrlError>
+parseAuthority(std::string_view authority);
 
 /**
  * @brief parseHost parses the portion of the URL that contains the DNS or IP
@@ -94,7 +99,7 @@ parseAuthority(absl::string_view authority);
  * @param host The portion of the URL that contains the hostname information.
  * @returns A tuple containing the hostname, port number, and error if any.
  */
-std::tuple<std::string, std::string, UrlError> parseHost(absl::string_view host);
+std::tuple<std::string, std::string, UrlError> parseHost(std::string_view host);
 
 /**
  * @brief Takes a raw query and converts it to a multimap of the values.
@@ -102,18 +107,16 @@ std::tuple<std::string, std::string, UrlError> parseHost(absl::string_view host)
  * @returns A multimap[key] = []{value1, value2, ...}.
  * @returns UrlError indicating an error while parsing if any.
  */
-std::tuple<QueryMap, UrlError>
-parseQuery(absl::string_view query);
+std::tuple<QueryMap, UrlError> parseQuery(std::string_view query);
 
 /**
  * @brief Takes vector of key value pairs and build a query string.
  * @param begin A const_iterator to the begining of the values.
  * @param end A const_iterator to the end of the values.
  */
-template<typename T>
-std::string buildQuery(T begin, T end) {
+template <typename T> std::string buildQuery(T begin, T end) {
     std::ostringstream buf;
-    for(auto it = begin; it != end; ++it) {
+    for (auto it = begin; it != end; ++it) {
         auto key = escape(it->first, encoding::encodeQueryComponent);
         auto value = escape(it->second, encoding::encodeQueryComponent);
         buf << absl::StrCat(key, "=", value, "&");
@@ -125,8 +128,8 @@ std::string buildQuery(T begin, T end) {
     return retVal;
 }
 
-}
+} // namespace internal
 
-}
+} // namespace net
 
-}
+} // namespace batteries

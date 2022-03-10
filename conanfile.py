@@ -15,6 +15,7 @@
 
 # -*- coding: utf-8 -*-
 
+import re
 from conans import ConanFile, CMake, tools
 from conans.errors import ConanInvalidConfiguration
 from conans.model.version import Version
@@ -29,12 +30,13 @@ class BatteriesConan(ConanFile):
     license = "Apache-2.0"
     topics = ("conan", "batteries", "batteries-cpp", "common-libraries")
     exports = ["LICENSE"]
-    exports_sources = ["CMakeLists.txt", "CMake/*", "batteries/*"]
+    exports_sources = ["CMakeLists.txt", "conan.cmake", "conanfile.py", "CMake/*", "batteries/*"]
     generators = "cmake"
     settings = "os", "arch", "compiler", "build_type"
-    requires = "abseil/master@bincrafters/stable"
-    options = {"cxx_standard": [11, 14, 17], "build_testing": [True, False], "fPIC" : [True, False]}
-    default_options = {"cxx_standard": 11, "build_testing": False, "fPIC": True}
+    requires = "abseil/20211102.0"
+    build_requires = "gtest/cci.20210126"
+    options = {"cxx_standard": [17, 20], "build_testing": [True, False], "fPIC" : [True, False]}
+    default_options = {"cxx_standard": 20, "build_testing": True, "fPIC": True}
     
     def config_options(self):
         if self.settings.os == "Windows":
@@ -46,16 +48,22 @@ class BatteriesConan(ConanFile):
            Version(self.settings.compiler.version.value) < "14":
             raise ConanInvalidConfiguration("Batteries does not support MSVC < 14")
 
+    def sanitize_version(self, version):
+        return re.sub(r'^v', '', version)
+
     def set_version(self):
         git = tools.Git(folder=self.recipe_folder)
-        self.version = "%s_%s" % (git.get_branch(), git.get_revision())
+        self.version = self.sanitize_version(git.get_tag()) if git.get_tag(
+        ) else "%s_%s" % (git.get_branch(), git.get_revision()[:12])
 
     def build(self):
         cmake = CMake(self)
+        cmake.definitions["BATT_RUN_TESTS"] = self.options.build_testing
         cmake.definitions["BUILD_TESTING"] = self.options.build_testing
         cmake.definitions["CMAKE_CXX_STANDARD"] = self.options.cxx_standard
         cmake.configure()
         cmake.build()
+        cmake.test()
 
     def package(self):
         self.copy("LICENSE", dst="licenses")

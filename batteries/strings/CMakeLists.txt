@@ -36,5 +36,4 @@ batteries_cc_test(
 	DEPS
 		batteries::strings
 		${CONAN_LIBS}
-		gmock_main
 )

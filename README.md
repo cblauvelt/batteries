@@ -31,6 +31,6 @@ conan_basic_setup()
 ```
 
 To install the packages run `conan install . --build missing`. You may get linking errors when compiling against this library
-either for a batteries function that uses absl::string_view or an abseil function that uses absl::string_view. That is due to
+either for a batteries function that uses std::string_view or an abseil function that uses std::string_view. That is due to
 compiling abseil or batteries with a different version of C++. To fix this enter the following from the batteries root directory
 `conan install . -s compiler.cppstd=17 --build missing`.

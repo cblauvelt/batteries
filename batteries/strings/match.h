@@ -27,20 +27,20 @@ namespace strings {
  * @param searchTerm The term that will be searched for in s.
  * @returns The number of times searchTerm appears in s.
  */
-unsigned int count(absl::string_view s, absl::string_view searchTerm) {
-	unsigned int charCount = 0;
-	auto startSearch = s.find(searchTerm, 0);
-	while(startSearch != s.npos) {
-		charCount++;
+unsigned int count(std::string_view s, std::string_view searchTerm) {
+    unsigned int charCount = 0;
+    auto startSearch = s.find(searchTerm, 0);
+    while (startSearch != s.npos) {
+        charCount++;
 
-		// Handle the last character being the search term.
-		if(startSearch + searchTerm.length() >= s.length()) {
-			break;
-		}
-		startSearch = s.find(searchTerm, startSearch + searchTerm.length());
-	}
+        // Handle the last character being the search term.
+        if (startSearch + searchTerm.length() >= s.length()) {
+            break;
+        }
+        startSearch = s.find(searchTerm, startSearch + searchTerm.length());
+    }
 
-	return charCount;
+    return charCount;
 }
 
 /**
@@ -48,14 +48,16 @@ unsigned int count(absl::string_view s, absl::string_view searchTerm) {
  * @param candidate The string to search for control characters.
  * @returns true if candidate contains a control character, otherwise false.
  */
-bool containsCtlChar(absl::string_view candidate) {
-	for(auto c : candidate) {
-		if(absl::ascii_iscntrl(c)) { return true; }
-	}
+bool containsCtlChar(std::string_view candidate) {
+    for (auto c : candidate) {
+        if (absl::ascii_iscntrl(c)) {
+            return true;
+        }
+    }
 
-	return false;
+    return false;
 }
 
-}
+} // namespace strings
 
-}
+} // namespace batteries

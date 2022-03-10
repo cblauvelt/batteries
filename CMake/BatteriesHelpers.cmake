@@ -229,7 +229,7 @@ function(batteries_cc_test)
   target_sources(${_NAME} PRIVATE ${BATT_CC_TEST_SRCS})
   target_include_directories(${_NAME}
     PUBLIC ${BATT_COMMON_INCLUDE_DIRS}
-    PRIVATE ${GMOCK_INCLUDE_DIRS} ${GTEST_INCLUDE_DIRS}
+    PRIVATE ${CONAN_INCLUDE_DIRS_GTEST}
   )
   target_compile_definitions(${_NAME}
     PUBLIC ${BATT_CC_TEST_DEFINES}

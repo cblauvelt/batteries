@@ -24,17 +24,15 @@ namespace {
 using QueryMap = batteries::net::internal::QueryMap;
 using UrlError = batteries::net::UrlError;
 
-
 // Test parseQuery
 
-struct ParseQueryTest{
+struct ParseQueryTest {
     std::string query;
     QueryMap map;
     UrlError err;
 };
-class MultipleParseQueryTests : public ::testing::TestWithParam<ParseQueryTest>{
-
-};
+class MultipleParseQueryTests
+    : public ::testing::TestWithParam<ParseQueryTest> {};
 
 TEST_P(MultipleParseQueryTests, EscapeQuery) {
     QueryMap map;
@@ -44,119 +42,94 @@ TEST_P(MultipleParseQueryTests, EscapeQuery) {
     EXPECT_EQ(GetParam().map, map);
 }
 
-INSTANTIATE_TEST_CASE_P(
-    QueryTests,
-    MultipleParseQueryTests,
+INSTANTIATE_TEST_SUITE_P(
+    QueryTests, MultipleParseQueryTests,
     ::testing::Values(
-        ParseQueryTest{
-            "a=1&b=2",
-            QueryMap{{"a", "1"}, {"b", "2"}},
-            batteries::net::UrlNoError
-        },ParseQueryTest{
-            "a=1&a=2&a=banana",
-            QueryMap{{"a", "1"}, {"a", "2"}, {"a", "banana"}},
-            batteries::net::UrlNoError
-        },ParseQueryTest{
-            "ascii=%3Ckey%3A+0x90%3E",
-            QueryMap{{"ascii", "<key: 0x90>"}},
-            batteries::net::UrlNoError
-        },ParseQueryTest{
-            "a=1;b=2",
-            QueryMap{{"a", "1"}, {"b", "2"}},
-            batteries::net::UrlNoError
-        },ParseQueryTest{
-            "a=1&a=2;a=banana",
-            QueryMap{{"a", "1"}, {"a", "2"}, {"a", "banana"}},
-            batteries::net::UrlNoError
-        },ParseQueryTest{
-            "a=1&&a=2;a=banana",
-            QueryMap{},
-            batteries::net::UrlParseError("a=1&&a=2;a=banana")
-        },ParseQueryTest{
-            "a=1&a=2;;a=banana",
-            QueryMap{},
-            batteries::net::UrlParseError("a=1&a=2;;a=banana")
-        },ParseQueryTest{
-            "a=1&a=2;a==banana",
-            QueryMap{},
-            batteries::net::UrlParseError("a=1&a=2;a==banana")
-        },ParseQueryTest{
-            "a==1&a=2;a=banana",
-            QueryMap{},
-            batteries::net::UrlParseError("a==1&a=2;a=banana")
-        }
-    )
-);
+        ParseQueryTest{"a=1&b=2", QueryMap{{"a", "1"}, {"b", "2"}},
+                       batteries::net::UrlNoError},
+        ParseQueryTest{"a=1&a=2&a=banana",
+                       QueryMap{{"a", "1"}, {"a", "2"}, {"a", "banana"}},
+                       batteries::net::UrlNoError},
+        ParseQueryTest{"ascii=%3Ckey%3A+0x90%3E",
+                       QueryMap{{"ascii", "<key: 0x90>"}},
+                       batteries::net::UrlNoError},
+        ParseQueryTest{"a=1;b=2", QueryMap{{"a", "1"}, {"b", "2"}},
+                       batteries::net::UrlNoError},
+        ParseQueryTest{"a=1&a=2;a=banana",
+                       QueryMap{{"a", "1"}, {"a", "2"}, {"a", "banana"}},
+                       batteries::net::UrlNoError},
+        ParseQueryTest{"a=1&&a=2;a=banana", QueryMap{},
+                       batteries::net::UrlParseError("a=1&&a=2;a=banana")},
+        ParseQueryTest{"a=1&a=2;;a=banana", QueryMap{},
+                       batteries::net::UrlParseError("a=1&a=2;;a=banana")},
+        ParseQueryTest{"a=1&a=2;a==banana", QueryMap{},
+                       batteries::net::UrlParseError("a=1&a=2;a==banana")},
+        ParseQueryTest{"a==1&a=2;a=banana", QueryMap{},
+                       batteries::net::UrlParseError("a==1&a=2;a=banana")}));
 
 // Test get string
 
-struct BuildQueryTest{
+struct BuildQueryTest {
     std::string query;
     QueryMap map;
 };
 
-class MultipleBuildQueryTests : public ::testing::TestWithParam<BuildQueryTest>{
-
-};
+class MultipleBuildQueryTests
+    : public ::testing::TestWithParam<BuildQueryTest> {};
 
 TEST_P(MultipleBuildQueryTests, EscapeQuery) {
-    std::string query = batteries::net::internal::buildQuery(GetParam().map.cbegin(), GetParam().map.cend());
+    std::string query = batteries::net::internal::buildQuery(
+        GetParam().map.cbegin(), GetParam().map.cend());
     EXPECT_EQ(GetParam().query, query);
 }
 
-INSTANTIATE_TEST_CASE_P(
-    QueryTests,
-    MultipleBuildQueryTests,
+INSTANTIATE_TEST_SUITE_P(
+    QueryTests, MultipleBuildQueryTests,
     ::testing::Values(
-        BuildQueryTest{
-            "a=1&b=2",
-            QueryMap{{"a", "1"}, {"b", "2"}}
-        },BuildQueryTest{
-            "a=1&a=2&a=banana",
-            QueryMap{{"a", "1"}, {"a", "2"}, {"a", "banana"}}
-        },BuildQueryTest{
-            "ascii=%3Ckey%3A+0x90%3E",
-            QueryMap{{"ascii", "<key: 0x90>"}}
-        },BuildQueryTest{
-            "a=1&a=2&a=banana&ba=1&ba=2&ba=banana",
-            QueryMap{{"a", "1"}, {"a", "2"}, {"a", "banana"}, {"ba", "1"}, {"ba", "2"}, {"ba", "banana"}}
-        }
-    )
-);
+        BuildQueryTest{"a=1&b=2", QueryMap{{"a", "1"}, {"b", "2"}}},
+        BuildQueryTest{"a=1&a=2&a=banana",
+                       QueryMap{{"a", "1"}, {"a", "2"}, {"a", "banana"}}},
+        BuildQueryTest{"ascii=%3Ckey%3A+0x90%3E",
+                       QueryMap{{"ascii", "<key: 0x90>"}}},
+        BuildQueryTest{"a=1&a=2&a=banana&ba=1&ba=2&ba=banana",
+                       QueryMap{{"a", "1"},
+                                {"a", "2"},
+                                {"a", "banana"},
+                                {"ba", "1"},
+                                {"ba", "2"},
+                                {"ba", "banana"}}}));
 
 // Test parseValues
-struct InitialValuesTest{
+struct InitialValuesTest {
     std::string query;
     batteries::net::QueryValues values;
 };
 
-class MultipleInitialValuesTests : public ::testing::TestWithParam<InitialValuesTest>{
-
-};
+class MultipleInitialValuesTests
+    : public ::testing::TestWithParam<InitialValuesTest> {};
 
 TEST_P(MultipleInitialValuesTests, EscapeQuery) {
     batteries::net::Query query(GetParam().values);
     EXPECT_EQ(GetParam().query, query.toString());
 }
 
-INSTANTIATE_TEST_CASE_P(
-    QueryTests,
-    MultipleInitialValuesTests,
+INSTANTIATE_TEST_SUITE_P(
+    QueryTests, MultipleInitialValuesTests,
     ::testing::Values(
+        InitialValuesTest{"?a=1&b=2",
+                          batteries::net::QueryValues{{"a", "1"}, {"b", "2"}}},
+        InitialValuesTest{"?a=1&a=2&a=banana",
+                          batteries::net::QueryValues{
+                              {"a", "1"}, {"a", "2"}, {"a", "banana"}}},
         InitialValuesTest{
-            "?a=1&b=2",
-            batteries::net::QueryValues{{"a", "1"}, {"b", "2"}}
-        },InitialValuesTest{
-            "?a=1&a=2&a=banana",
-            batteries::net::QueryValues{{"a", "1"}, {"a", "2"}, {"a", "banana"}}
-        },InitialValuesTest{
             "?ascii=%3Ckey%3A+0x90%3E",
-            batteries::net::QueryValues{{"ascii", "<key: 0x90>"}}
-        },InitialValuesTest{
-            "?a=1&a=2&a=banana&ba=1&ba=2&ba=banana",
-            batteries::net::QueryValues{{"a", "1"}, {"a", "2"}, {"a", "banana"}, {"ba", "1"}, {"ba", "2"}, {"ba", "banana"}}
-        }
-    )
-);
+            batteries::net::QueryValues{{"ascii", "<key: 0x90>"}}},
+        InitialValuesTest{"?a=1&a=2&a=banana&ba=1&ba=2&ba=banana",
+                          batteries::net::QueryValues{{"a", "1"},
+                                                      {"a", "2"},
+                                                      {"a", "banana"},
+                                                      {"ba", "1"},
+                                                      {"ba", "2"},
+                                                      {"ba", "banana"}}}));
 
-}
+} // namespace

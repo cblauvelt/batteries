@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.15)
 
 # Compiler id for Apple Clang is now AppleClang.
 cmake_policy(SET CMP0025 NEW)
@@ -27,9 +27,29 @@ cmake_policy(SET CMP0048 NEW)
 
 project(batteries CXX)
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+
+set(CMAKE_CXX_STANDARD 17)
+include(CheckCXXCompilerFlag)
+include(conan.cmake)
+
 # integrate conan build process
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
+if(NOT EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+    conan_cmake_run(CONANFILE conanfile.py
+                    BASIC_SETUP CMAKE_TARGETS
+                    BUILD missing)
+
+    conan_cmake_autodetect(settings)
+
+endif()
+
+if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+    include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+    conan_basic_setup()
+else()
+    message(FATAL_ERROR "The file conanbuildinfo.cmake could not be generated")
+endif()
 
 # when batteries is included as subproject (i.e. using add_subdirectory(abseil-cpp))
 # in the source tree of a project that uses it, install rules are disabled.
@@ -71,10 +91,7 @@ endif()
 ## pthread
 find_package(Threads REQUIRED)
 
-option(BATT_USE_GOOGLETEST_HEAD
-	"If ON, abseil will download HEAD from googletest at config time." OFF)
-
-option(BATT_RUN_TESTS "If ON, Batteries tests will be run." OFF)
+option(BATT_RUN_TESTS "If ON, Batteries tests will be run." ON)
 
 if(${BATT_RUN_TESTS})
 	# enable CTest.	This will set BUILD_TESTING to ON unless otherwise specified
@@ -85,16 +102,6 @@ endif()
 
 ## check targets
 if(BUILD_TESTING)
-
-	if(${BATT_USE_GOOGLETEST_HEAD})
-		include(CMake/Googletest/DownloadGTest.cmake)
-		set(batt_gtest_src_dir ${CMAKE_BINARY_DIR}/googletest-src)
-		set(batt_gtest_build_dir ${CMAKE_BINARY_DIR}/googletest-build)
-	endif()
-
-	check_target(gtest)
-	check_target(gtest_main)
-	check_target(gmock)
 
 	list(APPEND BATT_TEST_COMMON_LIBRARIES
 		gtest_main
