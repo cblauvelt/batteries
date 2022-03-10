@@ -20,22 +20,26 @@ namespace batteries {
 
 namespace net {
 
-UrlError UrlParseError(absl::string_view s) {
+UrlError UrlParseError(std::string_view s) {
     return UrlError(UrlErrorCode::ParseError, absl::StrCat("Parse Error: ", s));
 }
 
-UrlError UrlEscapeError(absl::string_view s) {
-    return UrlError(UrlErrorCode::EscapeError, absl::StrCat("Escape Error: ", s));
+UrlError UrlEscapeError(std::string_view s) {
+    return UrlError(UrlErrorCode::EscapeError,
+                    absl::StrCat("Escape Error: ", s));
 }
 
-UrlError UrlInvalidHostError(absl::string_view s) {
-    return UrlError(UrlErrorCode::InvalidHostError, absl::StrCat("Invalid host error: ", s));
+UrlError UrlInvalidHostError(std::string_view s) {
+    return UrlError(UrlErrorCode::InvalidHostError,
+                    absl::StrCat("Invalid host error: ", s));
 }
 
-UrlError UrlRangeError(absl::string_view s) {
-    return UrlError(UrlErrorCode::RangeError, absl::StrCat("'%' was not followed by two characters: ", s));
+UrlError UrlRangeError(std::string_view s) {
+    return UrlError(
+        UrlErrorCode::RangeError,
+        absl::StrCat("'%' was not followed by two characters: ", s));
 }
 
-}
+} // namespace net
 
-}
+} // namespace batteries

@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <string_view>
+
 #include "batteries/net/base.h"
 
 namespace batteries {
@@ -34,7 +36,8 @@ enum class encoding : uint8_t {
 };
 
 /**
- * @brief Takes a byte c that represents a value in hex and returns the decimal equivalent.
+ * @brief Takes a byte c that represents a value in hex and returns the decimal
+ * equivalent.
  * @param c The character to convert.
  */
 byte unhex(byte c);
@@ -43,7 +46,7 @@ byte unhex(byte c);
  * @brief Determines whether a character should be escaped based on the
  * charachter and the current encoding mode being used, i.e. query segment,
  * host segment, etc.
- * 
+ *
  * @param c The character that is being examined.
  * @param mode The current encoding mode.
  * @returns Whether or not the character should be escaped to the form %xx.
@@ -57,7 +60,7 @@ bool shouldEscape(byte c, encoding mode);
  * @param mode The portion of the URL that is evaluated
  * @returns The decoded string and an error if any
  */
-std::tuple<std::string, UrlError> unescape(absl::string_view s, encoding mode);
+std::tuple<std::string, UrlError> unescape(std::string_view s, encoding mode);
 
 /**
  * @brief escapes a string; the mode specifies
@@ -66,10 +69,10 @@ std::tuple<std::string, UrlError> unescape(absl::string_view s, encoding mode);
  * @param mode The portion of the URL that is evaluated
  * @returns The encoded string
  */
-std::string escape(absl::string_view s, encoding mode);
+std::string escape(std::string_view s, encoding mode);
 
-}
+} // namespace internal
 
-}
+} // namespace net
 
-}
+} // namespace batteries

@@ -14,9 +14,10 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
 #include <map>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include <absl/strings/string_view.h>
 
@@ -41,14 +42,14 @@ using UrlError = errors::Error<UrlErrorCode>;
 using byte = unsigned char;
 
 // Errors
-UrlError UrlParseError(absl::string_view s);
-UrlError UrlEscapeError(absl::string_view s);
-UrlError UrlInvalidHostError(absl::string_view s);
-UrlError UrlRangeError(absl::string_view s);
+UrlError UrlParseError(std::string_view s);
+UrlError UrlEscapeError(std::string_view s);
+UrlError UrlInvalidHostError(std::string_view s);
+UrlError UrlRangeError(std::string_view s);
 
 // Define constanst
 const UrlError UrlNoError = UrlError();
 
-}
+} // namespace net
 
-}
+} // namespace batteries

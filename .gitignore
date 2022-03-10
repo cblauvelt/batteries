@@ -1,5 +1,6 @@
 # Build Directory
-build/
+build/**
+.vscode/settings.json
 
 # Test Directory
 Testing/
@@ -37,12 +38,6 @@ Testing/
 *.out
 *.app
 
-# Development Files
-.devcontainer
-.vscode
-
-# Conan build files
-conanbuildinfo.cmake
-conanbuildinfo.txt
-conaninfo.txt
-graph_info.json
+# Testing
+Testing/
+.env

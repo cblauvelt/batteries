@@ -35,5 +35,5 @@ batteries_cc_test(
     ${BATT_TEST_COPTS}
   DEPS
     batteries::errors
-    gmock_main
+		${CONAN_LIBS}
 )

@@ -14,22 +14,18 @@
 
 #pragma once
 
-#include <string>
 #include <ostream>
+#include <string>
 
 namespace batteries {
 
 namespace errors {
 
-enum class GenericErrorCode {
-    NoError = 0,
-    GenericError
-};
+enum class GenericErrorCode { NoError = 0, GenericError };
 
-template <typename T = GenericErrorCode>
-class Error {
+template <typename T = GenericErrorCode> class Error {
 
-public:
+  public:
     Error();
     Error(T errorCode, std::string message);
     Error(std::string message);
@@ -39,19 +35,18 @@ public:
     std::string message() const;
     std::string what() const;
 
-    bool operator==(const Error<T> &rhs) const;
-    bool operator!=(const Error<T> &rhs) const;
+    bool operator==(const Error<T>& rhs) const;
+    bool operator!=(const Error<T>& rhs) const;
     bool operator!() const;
 
-    explicit operator bool() const {
-        return (mErrorCode != static_cast<T>(0));
+    explicit operator bool() const { return (mErrorCode != static_cast<T>(0)); }
+
+    friend std::ostream& operator<<(std::ostream& os, const Error<T>& error) {
+        return os << "error_code: " << (int)error.mErrorCode
+                  << ", message: " << error.mMessage;
     }
 
-    friend std::ostream& operator<< (std::ostream &os, const Error<T>& error) {
-        return os << "error_code: " << (int)error.mErrorCode << ", message: " << error.mMessage;
-    }
-
-private:
+  private:
     T mErrorCode;
     std::string mMessage;
 };
@@ -59,52 +54,33 @@ private:
 static const Error<> NoError;
 
 template <typename T>
-Error<T>::Error() :
-    mErrorCode(static_cast<T>(0)),
-    mMessage()
-{}
+Error<T>::Error()
+    : mErrorCode(static_cast<T>(0))
+    , mMessage() {}
 
 template <typename T>
-Error<T>::Error(T errorCode, std::string message) :
-    mErrorCode(errorCode),
-    mMessage(message)
-{}
+Error<T>::Error(T errorCode, std::string message)
+    : mErrorCode(errorCode)
+    , mMessage(message) {}
 
-template <typename T>
-T Error<T>::errorCode() const {
-    return mErrorCode;
+template <typename T> T Error<T>::errorCode() const { return mErrorCode; }
+
+template <typename T> std::string Error<T>::message() const { return mMessage; }
+
+template <typename T> std::string Error<T>::what() const { return message(); }
+
+template <typename T> bool Error<T>::operator==(const Error<T>& rhs) const {
+    return (mErrorCode == rhs.mErrorCode && mMessage == rhs.mMessage);
 }
 
-template <typename T>
-std::string Error<T>::message() const {
-    return mMessage;
-}
-
-template <typename T>
-std::string Error<T>::what() const {
-    return message();
-}
-
-template <typename T>
-bool Error<T>::operator==(const Error<T> &rhs) const {
-    return (
-        mErrorCode == rhs.mErrorCode &&
-        mMessage == rhs.mMessage
-    );
-}
-
-template <typename T>
-bool Error<T>::operator!=(const Error<T> &rhs) const {
+template <typename T> bool Error<T>::operator!=(const Error<T>& rhs) const {
     return !(*this == rhs);
 }
-    
 
-template <typename T>
-bool Error<T>::operator!() const {
+template <typename T> bool Error<T>::operator!() const {
     return !((bool)*this);
 }
-    
 
-}
+} // namespace errors
 
-}
+} // namespace batteries

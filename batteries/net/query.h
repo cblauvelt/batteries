@@ -14,16 +14,16 @@
 
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 #include <absl/strings/string_view.h>
 
-#include "batteries/errors/error.h"
 #include "base.h"
-#include "internal/parse.h"
+#include "batteries/errors/error.h"
 #include "internal/escape.h"
+#include "internal/parse.h"
 
 namespace batteries {
 
@@ -31,7 +31,7 @@ namespace net {
 
 class Query {
 
-public:
+  public:
     Query();
     Query(std::string query);
     Query(const QueryValues& values);
@@ -46,7 +46,7 @@ public:
      * Query is expected to be a list of key=value settings separated by
      * ampersands or semicolons. A setting without an equals sign is
      * interpreted as a key set to an empty value.
-     * 
+     *
      * @param query The raw query string to parse.
      */
     UrlError parse(std::string query);
@@ -60,7 +60,8 @@ public:
     /**
      * @brief setForceQuery Allows the user to force a null query when the query
      * values are empty.
-     * @param force If true forces a query, otherwise the query will not be forced.
+     * @param force If true forces a query, otherwise the query will not be
+     * forced.
      */
     void setForceQuery(bool force);
 
@@ -86,13 +87,13 @@ public:
     bool operator==(const Query& rhs) const;
     bool operator!=(const Query& rhs) const;
 
-private:    
-    std::multimap<std::string,std::string> mQuery;
+  private:
+    std::multimap<std::string, std::string> mQuery;
     std::string mRawQuery;
     bool mForceQuery;
     bool mRawQueryDirty;
 };
 
-}
+} // namespace net
 
-}
+} // namespace batteries

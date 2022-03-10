@@ -14,17 +14,17 @@
 
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 #include <absl/strings/string_view.h>
 
-#include "batteries/errors/error.h"
 #include "base.h"
-#include "query.h"
-#include "internal/parse.h"
+#include "batteries/errors/error.h"
 #include "internal/escape.h"
+#include "internal/parse.h"
+#include "query.h"
 
 namespace batteries {
 
@@ -33,235 +33,239 @@ namespace net {
 class Url;
 
 // Free Functions
-std::tuple<std::string, UrlError> unescapePath(absl::string_view path);
-std::tuple<std::string, UrlError> unescapeQuery(absl::string_view query);
-std::string escapePath(absl::string_view path);
-std::string escapeQuery(absl::string_view query);
+std::tuple<std::string, UrlError> unescapePath(std::string_view path);
+std::tuple<std::string, UrlError> unescapeQuery(std::string_view query);
+std::string escapePath(std::string_view path);
+std::string escapeQuery(std::string_view query);
 Url ResolveReference(Url url);
 
 /**
- * A Url is a parsed URL/URI. The general form is "[scheme:][//[userinfo@]host][/]path[?query][#fragment]"
+ * A Url is a parsed URL/URI. The general form is
+ * "[scheme:][//[userinfo@]host][/]path[?query][#fragment]"
  */
 class Url {
-	
-public:
-	/**
-	 * @brief Initializes a blank Url.
-	 */
-	Url();
 
-	/**
-	 * @brief Initializes a Url and parses the string rawurl using method Url::parse.
-	 */
-	Url(std::string rawurl);
+  public:
+    /**
+     * @brief Initializes a blank Url.
+     */
+    Url();
 
-	// Parse functions
+    /**
+     * @brief Initializes a Url and parses the string rawurl using method
+     * Url::parse.
+     */
+    Url(std::string rawurl);
 
-	/**
-	 * @brief parse parses a URL from a string. All forms of relative URLs are allowed.
-	 */
-	UrlError parse(absl::string_view rawUrl);
-	
-	/**
-	 * @brief parseUri parses a URL from a string. The URL is assumed to have arrived
-	 * via an HTTP request, in which case only absolute URLs or path-absolute relative
-	 * URLs are allowed.
-	 */
-	UrlError parseUri(absl::string_view rawUrl);
+    // Parse functions
 
-	// Setters/Getters
-	/**
-	 * @brief scheme returns the scheme parsed from the url.
-	 * Example: For https://foo.com the scheme is 'https'.
-	 * @returns The scheme of the url.
-	 */
-	std::string scheme() const;
+    /**
+     * @brief parse parses a URL from a string. All forms of relative URLs are
+     * allowed.
+     */
+    UrlError parse(std::string_view rawUrl);
 
-	/**
-	 * @brief setScheme takes a string and sets the scheme of the url.
-	 * @param scheme A string that represents the scheme of the url.
-	 */
-	void setScheme(std::string scheme);
+    /**
+     * @brief parseUri parses a URL from a string. The URL is assumed to have
+     * arrived via an HTTP request, in which case only absolute URLs or
+     * path-absolute relative URLs are allowed.
+     */
+    UrlError parseUri(std::string_view rawUrl);
 
-	std::string opaque() const;
-	void setOpaque(std::string opaque);
+    // Setters/Getters
+    /**
+     * @brief scheme returns the scheme parsed from the url.
+     * Example: For https://foo.com the scheme is 'https'.
+     * @returns The scheme of the url.
+     */
+    std::string scheme() const;
 
-	/**
-	 * @brief username returns the username of the url.
-	 * @returns The username of the url.
-	 */
-	std::string username() const;
+    /**
+     * @brief setScheme takes a string and sets the scheme of the url.
+     * @param scheme A string that represents the scheme of the url.
+     */
+    void setScheme(std::string scheme);
 
-	/**
-	 * @brief setUsername sets the username portion of the user info in the url.
-	 * Example: https://user@foo.com the username is 'user'.
-	 * @param username The name of the user.
-	 */
-	void setUsername(std::string username);
+    std::string opaque() const;
+    void setOpaque(std::string opaque);
 
-	/**
-	 * @brief password returns the password of the url.
-	 * Example: https://user:pass@foo.com the password is 'pass'.
-	 * @returns The plaintext password of the password portion of the user info.
-	 */
-	std::string password() const;
+    /**
+     * @brief username returns the username of the url.
+     * @returns The username of the url.
+     */
+    std::string username() const;
 
-	/**
-	 * @brief setPassword sets the password portion of the user info in the url.
-	 * Example: https://user:pass@foo.com the password is 'pass'.
-	 * @param password The password of the user.
-	 */
-	void setPassword(std::string password);
+    /**
+     * @brief setUsername sets the username portion of the user info in the url.
+     * Example: https://user@foo.com the username is 'user'.
+     * @param username The name of the user.
+     */
+    void setUsername(std::string username);
 
-	/**
-	 * @brief host returns the host information.
-	 * @returns the host information in 'hostname:port' format.
-	 */
-	std::string host() const;
+    /**
+     * @brief password returns the password of the url.
+     * Example: https://user:pass@foo.com the password is 'pass'.
+     * @returns The plaintext password of the password portion of the user info.
+     */
+    std::string password() const;
 
-	/**
-	 * @brief setHost takes a host in hostname[:port] format parses the hostname and
-	 * the port number. This different from setHost and setPort in that there is some
-	 * error checking during the parsing.
-	 * @param host The host in hostname[:port] format.
-	 * @returns A UrlError if any while parsing the input.
-	 */
-	UrlError setHost(std::string host);
+    /**
+     * @brief setPassword sets the password portion of the user info in the url.
+     * Example: https://user:pass@foo.com the password is 'pass'.
+     * @param password The password of the user.
+     */
+    void setPassword(std::string password);
 
-	/**
-	 * @brief hostname returns the host information.
-	 * @returns the hostname information.
-	 */
-	std::string hostname() const;
+    /**
+     * @brief host returns the host information.
+     * @returns the host information in 'hostname:port' format.
+     */
+    std::string host() const;
 
-	/**
-	 * @brief setHostname sets the hostname without any parsing to ensure that it is valid.
-	 * @param hostname A string that represents the hostname.
-	 */
-	void setHostname(std::string hostname);
+    /**
+     * @brief setHost takes a host in hostname[:port] format parses the hostname
+     * and the port number. This different from setHost and setPort in that
+     * there is some error checking during the parsing.
+     * @param host The host in hostname[:port] format.
+     * @returns A UrlError if any while parsing the input.
+     */
+    UrlError setHost(std::string host);
 
-	/**
-	 * @brief port returns the port information.
-	 * @returns the port information.
-	 */
-	std::string port() const;
+    /**
+     * @brief hostname returns the host information.
+     * @returns the hostname information.
+     */
+    std::string hostname() const;
 
-	/**
-	 * @brief setPort sets the port without any parsing to ensure that it is valid.
-	 * @param port A string that represents the hostname.
-	 */
-	void setPort(uint16_t port);
+    /**
+     * @brief setHostname sets the hostname without any parsing to ensure that
+     * it is valid.
+     * @param hostname A string that represents the hostname.
+     */
+    void setHostname(std::string hostname);
 
-	/**
-	 * @brief path returns the path information.
-	 * @returns the path information.
-	 */
-	std::string path() const;
+    /**
+     * @brief port returns the port information.
+     * @returns the port information.
+     */
+    std::string port() const;
 
-	/**
-	 * @brief rawPath returns the unescaped path.
-	 * @returns the unescaped path information.
-	 */
-	std::string rawPath() const;
+    /**
+     * @brief setPort sets the port without any parsing to ensure that it is
+     * valid.
+     * @param port A string that represents the hostname.
+     */
+    void setPort(uint16_t port);
 
-	/**
-	 * @brief setPath sets the Path and RawPath fields of the URL based on the provided
-	 * escaped path p. It maintains the invariant that RawPath is only specified
-	 * when it differs from the default encoding of the path.
-	 * For example:
-	 * - setPath("/foo/bar")   will set Path="/foo/bar" and RawPath=""
-	 * - setPath("/foo%2fbar") will set Path="/foo/bar" and RawPath="/foo%2fbar"
-	 * 
-	 * @param path The path to parse.
-	 * @returns setPath will return an error only if the provided path contains an invalid
-	 * escaping.
-	 */
-	UrlError setPath(absl::string_view path);
+    /**
+     * @brief path returns the path information.
+     * @returns the path information.
+     */
+    std::string path() const;
 
-	/**
-	 * @brief query returns the query information.
-	 * @returns the query information.
-	 */
-	Query query() const;
+    /**
+     * @brief rawPath returns the unescaped path.
+     * @returns the unescaped path information.
+     */
+    std::string rawPath() const;
 
-	/**
-	 * @brief setQuery sets the query.
-	 * @param query A list of key value pairs that represents the query.
-	 */
-	void setQuery(const Query& query);
+    /**
+     * @brief setPath sets the Path and RawPath fields of the URL based on the
+     * provided escaped path p. It maintains the invariant that RawPath is only
+     * specified when it differs from the default encoding of the path. For
+     * example:
+     * - setPath("/foo/bar")   will set Path="/foo/bar" and RawPath=""
+     * - setPath("/foo%2fbar") will set Path="/foo/bar" and RawPath="/foo%2fbar"
+     *
+     * @param path The path to parse.
+     * @returns setPath will return an error only if the provided path contains
+     * an invalid escaping.
+     */
+    UrlError setPath(std::string_view path);
 
-	/**
-	 * @brief fragment returns the fragment information.
-	 * @returns the fragment information.
-	 */
-	std::string fragment() const;
+    /**
+     * @brief query returns the query information.
+     * @returns the query information.
+     */
+    Query query() const;
 
-	/**
-	 * @brief setFragment sets the fragment.
-	 * @param fragment A list of key value pairs that represents the query.
-	 * @returns UrlError Any error found while parsing the fragment.
-	 */
-	UrlError setFragment(std::string fragment);
+    /**
+     * @brief setQuery sets the query.
+     * @param query A list of key value pairs that represents the query.
+     */
+    void setQuery(const Query& query);
 
-	
-	// Conveniance functions
-	bool hasScheme() const;
-	bool hasUsername() const;
-	bool hasPassword() const;
+    /**
+     * @brief fragment returns the fragment information.
+     * @returns the fragment information.
+     */
+    std::string fragment() const;
 
-	// Conversion functions
+    /**
+     * @brief setFragment sets the fragment.
+     * @param fragment A list of key value pairs that represents the query.
+     * @returns UrlError Any error found while parsing the fragment.
+     */
+    UrlError setFragment(std::string fragment);
 
-	/**
-	 * @brief String reassembles the URL into a valid URL string.
-	 * The general form of the result is one of:
-	 *
-	 *	scheme:opaque?query#fragment
-	 *	scheme://userinfo@host/path?query#fragment
-	 *
-	 * If opaque() is non-empty, toString uses the first form;
-	 * otherwise it uses the second form.
-	 * Any non-ASCII characters in host are escaped.
-	 * To obtain the path, String uses escapedPath().
-	 *
-	 * In the second form, the following rules apply:
-	 *	- if Scheme is empty, scheme: is omitted.
-	 *	- if User is nil, userinfo@ is omitted.
-	 *	- if Host is empty, host/ is omitted.
-	 *	- if Scheme and u.Host are empty and u.User is nil,
-	 *	   the entire scheme://userinfo@host/ is omitted.
-	 *	- if Host is non-empty and u.Path begins with a /,
-	 *	   the form host/path does not add its own /.
-	 *	- if RawQuery is empty, ?query is omitted.
-	 *	- if Fragment is empty, #fragment is omitted.
-	 */
-	std::string toString() const;
-	std::string requestUri() const;
-	std::string escapedPath() const;
-	std::string escapedQuery() const;
+    // Conveniance functions
+    bool hasScheme() const;
+    bool hasUsername() const;
+    bool hasPassword() const;
 
-	// Operators
-	bool operator==(const Url& rhs) const;
-	bool operator!=(const Url& rhs) const;
+    // Conversion functions
 
-private:
-	UrlError parse(absl::string_view rawUrl, bool viaRequest);
+    /**
+     * @brief String reassembles the URL into a valid URL string.
+     * The general form of the result is one of:
+     *
+     *	scheme:opaque?query#fragment
+     *	scheme://userinfo@host/path?query#fragment
+     *
+     * If opaque() is non-empty, toString uses the first form;
+     * otherwise it uses the second form.
+     * Any non-ASCII characters in host are escaped.
+     * To obtain the path, String uses escapedPath().
+     *
+     * In the second form, the following rules apply:
+     *	- if Scheme is empty, scheme: is omitted.
+     *	- if User is nil, userinfo@ is omitted.
+     *	- if Host is empty, host/ is omitted.
+     *	- if Scheme and u.Host are empty and u.User is nil,
+     *	   the entire scheme://userinfo@host/ is omitted.
+     *	- if Host is non-empty and u.Path begins with a /,
+     *	   the form host/path does not add its own /.
+     *	- if RawQuery is empty, ?query is omitted.
+     *	- if Fragment is empty, #fragment is omitted.
+     */
+    std::string toString() const;
+    std::string requestUri() const;
+    std::string escapedPath() const;
+    std::string escapedQuery() const;
 
-private:
-	std::string mScheme;
-	std::string mOpaque;
-	std::string mUsername;
-	std::string mPassword;
-	std::string mHost;
-	std::string mPort;
-	std::string mPath;
-	std::string mRawPath;
-	Query mQuery;
-	std::string mFragment;
+    // Operators
+    bool operator==(const Url& rhs) const;
+    bool operator!=(const Url& rhs) const;
+
+  private:
+    UrlError parse(std::string_view rawUrl, bool viaRequest);
+
+  private:
+    std::string mScheme;
+    std::string mOpaque;
+    std::string mUsername;
+    std::string mPassword;
+    std::string mHost;
+    std::string mPort;
+    std::string mPath;
+    std::string mRawPath;
+    Query mQuery;
+    std::string mFragment;
 };
 
-}
+} // namespace net
 
-}
+} // namespace batteries
 
 namespace std {
 
