@@ -30,14 +30,16 @@ class BatteriesConan(ConanFile):
     license = "Apache-2.0"
     topics = ("conan", "batteries", "batteries-cpp", "common-libraries")
     exports = ["LICENSE"]
-    exports_sources = ["CMakeLists.txt", "conan.cmake", "conanfile.py", "CMake/*", "batteries/*"]
+    exports_sources = ["CMakeLists.txt", "conan.cmake",
+                       "conanfile.py", "CMake/*", "batteries/*"]
     generators = "cmake"
     settings = "os", "arch", "compiler", "build_type"
     requires = "abseil/20211102.0"
     build_requires = "gtest/cci.20210126"
-    options = {"cxx_standard": [17, 20], "build_testing": [True, False], "fPIC" : [True, False]}
+    options = {"cxx_standard": [17, 20], "build_testing": [
+        True, False], "fPIC": [True, False]}
     default_options = {"cxx_standard": 20, "build_testing": True, "fPIC": True}
-    
+
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
@@ -46,7 +48,8 @@ class BatteriesConan(ConanFile):
         if self.settings.os == "Windows" and \
            self.settings.compiler == "Visual Studio" and \
            Version(self.settings.compiler.version.value) < "14":
-            raise ConanInvalidConfiguration("Batteries does not support MSVC < 14")
+            raise ConanInvalidConfiguration(
+                "Batteries does not support MSVC < 14")
 
     def sanitize_tag(self, version):
         return re.sub(r'^v', '', version)
@@ -56,7 +59,7 @@ class BatteriesConan(ConanFile):
 
     def set_version(self):
         git = tools.Git(folder=self.recipe_folder)
-        self.version = self.sanitize_version(git.get_tag()) if git.get_tag(
+        self.version = self.sanitize_tag(git.get_tag()) if git.get_tag(
         ) else "%s_%s" % (self.sanitize_branch(git.get_branch()), git.get_revision()[:12])
 
     def build(self):
