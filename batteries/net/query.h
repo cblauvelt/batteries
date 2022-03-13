@@ -29,69 +29,69 @@ namespace batteries {
 
 namespace net {
 
-class Query {
+class query {
 
   public:
-    Query();
-    Query(std::string query);
-    Query(const QueryValues& values);
+    query();
+    query(std::string query);
+    query(const query_values& values);
 
     /**
      * @brief parse parses the URL-encoded query string and returns
      * a map listing the values specified for each key.
-     * ParseQuery always returns a non-nil map containing all the
+     * Parsequery always returns a non-nil map containing all the
      * valid query parameters found; err describes the first decoding error
      * encountered, if any.
      *
-     * Query is expected to be a list of key=value settings separated by
+     * query is expected to be a list of key=value settings separated by
      * ampersands or semicolons. A setting without an equals sign is
      * interpreted as a key set to an empty value.
      *
      * @param query The raw query string to parse.
      */
-    UrlError parse(std::string query);
+    error parse(std::string query);
 
     /**
-     * @brief toString returns the query in raw string form.
+     * @brief to_string returns the query in raw string form.
      * @returns The query in raw string form.
      */
-    std::string toString() const;
+    std::string to_string() const;
 
     /**
-     * @brief setForceQuery Allows the user to force a null query when the query
-     * values are empty.
+     * @brief set_force_query Allows the user to force a null query when the
+     * query values are empty.
      * @param force If true forces a query, otherwise the query will not be
      * forced.
      */
-    void setForceQuery(bool force);
+    void set_force_query(bool force);
 
     /**
      * @brief An empty query string e.g. "?" can be forced when query values
      * are empty.
      * @returns true if a query will be forced, otherwise false.
      */
-    bool forceQuery() const;
+    bool force_query() const;
 
-    // Query functions
+    // query functions
     void set(std::string key, std::string value);
-    void add(QueryValue value);
+    void add(query_value value);
     void add(std::string key, std::string value);
     void del(std::string key);
-    QueryValues values() const;
-    QueryValues get(std::string key) const;
+    query_values values() const;
+    query_values get(std::string key) const;
 
     bool empty() const;
     std::size_t size() const;
 
     // Operators
-    bool operator==(const Query& rhs) const;
-    bool operator!=(const Query& rhs) const;
+    bool operator==(const query& rhs) const;
+    bool operator!=(const query& rhs) const;
 
   private:
-    std::multimap<std::string, std::string> mQuery;
-    std::string mRawQuery;
-    bool mForceQuery;
-    bool mRawQueryDirty;
+    std::multimap<std::string, std::string> query_;
+    std::string raw_query_;
+    bool force_query_;
+    bool raw_query_dirty_;
 };
 
 } // namespace net

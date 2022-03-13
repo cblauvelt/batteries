@@ -41,168 +41,168 @@ namespace batteries {
 
 namespace net {
 
-std::tuple<std::string, UrlError> unescapePath(std::string_view path) {
+std::tuple<std::string, error> unescape_path(std::string_view path) {
     return internal::unescape(path, internal::encoding::encodePathSegment);
 }
 
-std::tuple<std::string, UrlError> unescapeQuery(std::string_view query) {
+std::tuple<std::string, error> unescape_query(std::string_view query) {
     return internal::unescape(query, internal::encoding::encodeQueryComponent);
 }
 
-std::string escapePath(std::string_view path) {
+std::string escape_path(std::string_view path) {
     return internal::escape(path, internal::encoding::encodePathSegment);
 }
 
-std::string escapeQuery(std::string_view query) {
+std::string escape_query(std::string_view query) {
     return internal::escape(query, internal::encoding::encodeQueryComponent);
 }
 
 // TODO: Implement
-Url ResolveReference(Url url) { return url; }
+url resolve_reference(url url) { return url; }
 
-Url::Url()
-    : mScheme()
-    , mOpaque()
-    , mUsername()
-    , mPassword()
-    , mHost()
-    , mPort()
-    , mPath()
-    , mRawPath()
-    , mQuery()
-    , mFragment() {}
+url::url()
+    : scheme_()
+    , opaque_()
+    , username_()
+    , password_()
+    , host_()
+    , port_()
+    , path_()
+    , raw_path_()
+    , query_()
+    , fragment_() {}
 
-Url::Url(std::string rawurl)
-    : mScheme()
-    , mOpaque()
-    , mUsername()
-    , mPassword()
-    , mHost()
-    , mPort()
-    , mPath()
-    , mRawPath()
-    , mQuery()
-    , mFragment() {
+url::url(std::string rawurl)
+    : scheme_()
+    , opaque_()
+    , username_()
+    , password_()
+    , host_()
+    , port_()
+    , path_()
+    , raw_path_()
+    , query_()
+    , fragment_() {
     parse(rawurl);
 }
 
-UrlError Url::parse(std::string_view rawUrl) { return parse(rawUrl, false); }
-UrlError Url::parseUri(std::string_view rawUrl) { return parse(rawUrl, true); }
+error url::parse(std::string_view rawUrl) { return parse(rawUrl, false); }
+error url::parse_uri(std::string_view rawUrl) { return parse(rawUrl, true); }
 
-std::string Url::scheme() const { return mScheme; }
+std::string url::scheme() const { return scheme_; }
 
-void Url::setScheme(std::string scheme) { mScheme = scheme; }
+void url::set_scheme(std::string scheme) { scheme_ = scheme; }
 
-std::string Url::opaque() const { return mOpaque; }
+std::string url::opaque() const { return opaque_; }
 
-void Url::setOpaque(std::string opaque) { mOpaque = opaque; }
+void url::set_opaque(std::string opaque) { opaque_ = opaque; }
 
-std::string Url::username() const { return mUsername; }
+std::string url::username() const { return username_; }
 
-void Url::setUsername(std::string username) { mUsername = username; }
+void url::set_username(std::string username) { username_ = username; }
 
-std::string Url::password() const { return mPassword; }
+std::string url::password() const { return password_; }
 
-void Url::setPassword(std::string password) { mPassword = password; }
+void url::set_password(std::string password) { password_ = password; }
 
-std::string Url::host() const {
-    if (!mPort.empty()) {
-        return absl::StrCat(mHost, ":", mPort);
+std::string url::host() const {
+    if (!port_.empty()) {
+        return absl::StrCat(host_, ":", port_);
     }
 
-    return mHost;
+    return host_;
 }
 
-UrlError Url::setHost(std::string host) {
-    UrlError err;
-    std::tie(mHost, mPort, err) = internal::parseHost(host);
+error url::set_host(std::string host) {
+    error err;
+    std::tie(host_, port_, err) = internal::parse_host(host);
     return err;
 }
 
-std::string Url::hostname() const { return mHost; }
+std::string url::hostname() const { return host_; }
 
-void Url::setHostname(std::string hostname) { mHost = hostname; }
+void url::set_hostname(std::string hostname) { host_ = hostname; }
 
-std::string Url::port() const { return mPort; }
+std::string url::port() const { return port_; }
 
-void Url::setPort(uint16_t port) { mPort = absl::StrCat(port); }
+void url::set_port(uint16_t port) { port_ = absl::StrCat(port); }
 
-std::string Url::path() const { return mPath; }
+std::string url::path() const { return path_; }
 
-std::string Url::rawPath() const { return mRawPath; }
+std::string url::raw_path() const { return raw_path_; }
 
-UrlError Url::setPath(std::string_view path) {
-    UrlError err;
-    std::tie(mPath, err) =
+error url::set_path(std::string_view path) {
+    error err;
+    std::tie(path_, err) =
         internal::unescape(path, internal::encoding::encodePath);
-    if (err != UrlNoError) {
+    if (err != errors::no_error) {
         return err;
     }
 
-    std::string escapedPath =
-        internal::escape(mPath, internal::encoding::encodePath);
-    if (mPath == escapedPath) {
+    std::string escaped_path =
+        internal::escape(path_, internal::encoding::encodePath);
+    if (path_ == escaped_path) {
         // Default encoding is fine.
-        mRawPath = "";
+        raw_path_ = "";
     } else {
-        mRawPath = (std::string)path;
+        raw_path_ = (std::string)path;
     }
-    return UrlNoError;
+    return errors::no_error;
 }
 
-Query Url::query() const { return mQuery; }
+net::query url::query() const { return query_; }
 
-void Url::setQuery(const Query& query) { mQuery = query; }
+void url::set_query(const net::query& query) { query_ = query; }
 
-std::string Url::fragment() const {
-    return internal::escape(mFragment, internal::encoding::encodeFragment);
+std::string url::fragment() const {
+    return internal::escape(fragment_, internal::encoding::encodeFragment);
 }
 
-UrlError Url::setFragment(std::string fragment) {
-    UrlError err;
-    std::tie(mFragment, err) =
+error url::set_fragment(std::string fragment) {
+    error err;
+    std::tie(fragment_, err) =
         internal::unescape(fragment, internal::encoding::encodeFragment);
 
     return err;
 }
 
 // Conveniance functions
-bool Url::hasScheme() const { return !mScheme.empty(); }
-bool Url::hasUsername() const { return !mUsername.empty(); }
-bool Url::hasPassword() const { return !mPassword.empty(); }
+bool url::has_scheme() const { return !scheme_.empty(); }
+bool url::has_username() const { return !username_.empty(); }
+bool url::has_password() const { return !password_.empty(); }
 
-std::string Url::toString() const {
+std::string url::to_string() const {
     std::ostringstream buf;
 
-    if (mPath == "*") {
+    if (path_ == "*") {
         return "*";
     }
-    if (!mScheme.empty()) {
-        buf << mScheme << ':';
+    if (!scheme_.empty()) {
+        buf << scheme_ << ':';
     }
-    if (!mOpaque.empty()) {
-        buf << mOpaque;
+    if (!opaque_.empty()) {
+        buf << opaque_;
     } else {
-        if (!mScheme.empty() || !mHost.empty() || !mUsername.empty()) {
-            if (!mHost.empty() || !mPath.empty() || !mUsername.empty()) {
+        if (!scheme_.empty() || !host_.empty() || !username_.empty()) {
+            if (!host_.empty() || !path_.empty() || !username_.empty()) {
                 buf << "//";
             }
-            if (!mUsername.empty()) {
-                buf << mUsername;
-                if (!mPassword.empty()) {
-                    buf << ":" << mPassword;
+            if (!username_.empty()) {
+                buf << username_;
+                if (!password_.empty()) {
+                    buf << ":" << password_;
                 }
                 buf << '@';
             }
-            if (!mHost.empty()) {
-                buf << internal::escape(mHost, internal::encoding::encodeHost);
-                if (!mPort.empty()) {
-                    buf << ":" << mPort;
+            if (!host_.empty()) {
+                buf << internal::escape(host_, internal::encoding::encodeHost);
+                if (!port_.empty()) {
+                    buf << ":" << port_;
                 }
             }
         }
-        auto path = escapedPath();
-        if (!path.empty() && path[0] != '/' && !mHost.empty()) {
+        auto path = escaped_path();
+        if (!path.empty() && path[0] != '/' && !host_.empty()) {
             buf << '/';
         }
         if (buf.tellp() == 0) {
@@ -220,97 +220,99 @@ std::string Url::toString() const {
         buf << path;
     }
 
-    buf << mQuery.toString();
+    buf << query_.to_string();
 
-    if (!mFragment.empty()) {
+    if (!fragment_.empty()) {
         buf << '#'
-            << internal::escape(mFragment, internal::encoding::encodeFragment);
+            << internal::escape(fragment_, internal::encoding::encodeFragment);
     }
     return buf.str();
 }
 
-std::string Url::requestUri() const {
-    auto result = mOpaque;
+std::string url::request_uri() const {
+    auto result = opaque_;
     if (result == "") {
-        result = escapedPath();
+        result = escaped_path();
         if (result == "") {
             result = "/";
         }
     } else {
         if (absl::StartsWith(result, "//")) {
-            result = mScheme + ":" + result;
+            result = scheme_ + ":" + result;
         }
     }
-    absl::StrAppend(&result, mQuery.toString());
+    absl::StrAppend(&result, query_.to_string());
 
     return result;
 }
 
-std::string Url::escapedPath() const {
-    return internal::escape(mPath, internal::encoding::encodePath);
+std::string url::escaped_path() const {
+    return internal::escape(path_, internal::encoding::encodePath);
 }
 
-std::string Url::escapedQuery() const {
+std::string url::escaped_query() const {
     std::string query;
     return internal::escape(query, internal::encoding::encodeQueryComponent);
 }
 
-bool Url::operator==(const Url& rhs) const {
-    return (mScheme == rhs.mScheme && mOpaque == rhs.mOpaque &&
-            mUsername == rhs.mUsername && mPassword == rhs.mPassword &&
-            mHost == rhs.mHost && mPort == rhs.mPort && mPath == rhs.mPath &&
-            mRawPath == rhs.mRawPath && mQuery == rhs.mQuery &&
-            mFragment == rhs.mFragment);
+bool url::operator==(const url& rhs) const {
+    return (scheme_ == rhs.scheme_ && opaque_ == rhs.opaque_ &&
+            username_ == rhs.username_ && password_ == rhs.password_ &&
+            host_ == rhs.host_ && port_ == rhs.port_ && path_ == rhs.path_ &&
+            raw_path_ == rhs.raw_path_ && query_ == rhs.query_ &&
+            fragment_ == rhs.fragment_);
 }
 
-bool Url::operator!=(const Url& rhs) const { return !(*this == rhs); }
+bool url::operator!=(const url& rhs) const { return !(*this == rhs); }
 
-UrlError Url::parse(std::string_view rawurl, bool viaRequest) {
+error url::parse(std::string_view rawurl, bool viaRequest) {
     std::string_view rest;
-    UrlError err;
+    error err;
 
-    if (strings::containsCtlChar(rawurl)) {
-        return UrlParseError("invalid control character in URL");
+    if (strings::contains_ctl_char(rawurl)) {
+        return error(url_error_code::parse_error,
+                     "invalid control character in URL");
     }
 
     if (rawurl.empty() && viaRequest) {
-        return UrlParseError("empty url");
+        return error(url_error_code::parse_error, "empty url");
     }
 
     if (rawurl == "*") {
-        mPath = "*";
-        return UrlNoError;
+        path_ = "*";
+        return errors::no_error;
     }
 
     // Split off fragment
-    std::tie(mFragment, rest, err) = internal::parseFragment(rawurl);
+    std::tie(fragment_, rest, err) = internal::parse_fragment(rawurl);
 
     // Split off possible leading "http:", "mailto:", etc.
     // Cannot contain escaped characters.
     std::string_view scheme;
-    std::tie(scheme, rest, err) = internal::parseScheme(rest);
-    if (err != UrlNoError) {
+    std::tie(scheme, rest, err) = internal::parse_scheme(rest);
+    if (err != errors::no_error) {
         return err;
     }
-    mScheme = absl::AsciiStrToLower(scheme);
+    scheme_ = absl::AsciiStrToLower(scheme);
 
     if (absl::EndsWith(rest, "?") && strings::count(rest, "?") == 1) {
-        mQuery.setForceQuery(true);
+        query_.set_force_query(true);
         rest = rest.substr(0, rest.length() - 1);
     } else {
         std::string_view rawQuery;
         std::tie(rest, rawQuery) = internal::split(rest, "?", true);
-        mQuery.parse((std::string)rawQuery);
+        query_.parse((std::string)rawQuery);
     }
 
     if (!absl::StartsWith(rest, "/")) {
-        if (mScheme.empty()) {
+        if (scheme_.empty()) {
             // We consider rootless paths per RFC 3986 as opaque.
-            mOpaque = (std::string)rest;
-            return UrlNoError;
+            opaque_ = (std::string)rest;
+            return errors::no_error;
         }
         if (viaRequest) {
-            return UrlParseError("invalid URI for request");
+            return error(url_error_code::parse_error,
+                         "invalid URI for request");
         }
 
         // Avoid confusion with malformed schemes, like cache_object:foo/bar.
@@ -324,12 +326,12 @@ UrlError Url::parse(std::string_view rawurl, bool viaRequest) {
         auto slash = rest.find('/');
         if (colon >= 0 && (slash < 0 || colon < slash)) {
             // First path segment has colon. Not allowed in relative URL.
-            return UrlParseError(
-                "first path segment in URL cannot contain colon");
+            return error(url_error_code::parse_error,
+                         "first path segment in URL cannot contain colon");
         }
     }
 
-    if (!mScheme.empty() || !viaRequest && !absl::StartsWith(rest, "///") &&
+    if (!scheme_.empty() || !viaRequest && !absl::StartsWith(rest, "///") &&
                                 absl::StartsWith(rest, "//")) {
         std::string_view authority;
         std::string_view host;
@@ -338,15 +340,15 @@ UrlError Url::parse(std::string_view rawurl, bool viaRequest) {
         std::tie(authority, rest) = internal::split(rest.substr(2), "/", false);
 
         // Parse the username and password
-        std::tie(mUsername, mPassword, host, err) =
-            internal::parseAuthority(authority);
-        if (err != UrlNoError) {
+        std::tie(username_, password_, host, err) =
+            internal::parse_authority(authority);
+        if (err != errors::no_error) {
             return err;
         }
 
         // Parse the host
-        std::tie(mHost, mPort, err) = internal::parseHost(host);
-        if (err != UrlNoError) {
+        std::tie(host_, port_, err) = internal::parse_host(host);
+        if (err != errors::no_error) {
             return err;
         }
     }
@@ -354,11 +356,11 @@ UrlError Url::parse(std::string_view rawurl, bool viaRequest) {
     // RawPath is a hint of the encoding of Path. We don't want to set it if
     // the default escaping of Path is equivalent, to help make sure that people
     // don't rely on it in general.
-    err = setPath(rest);
-    if (err != UrlNoError) {
+    err = set_path(rest);
+    if (err != errors::no_error) {
         return err;
     }
-    return UrlNoError;
+    return errors::no_error;
 }
 
 } // namespace net
@@ -367,6 +369,6 @@ UrlError Url::parse(std::string_view rawurl, bool viaRequest) {
 
 namespace std {
 
-std::string to_string(batteries::net::Url url) { return url.toString(); }
+std::string to_string(batteries::net::url url) { return url.to_string(); }
 
 } // namespace std

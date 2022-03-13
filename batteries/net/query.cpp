@@ -23,112 +23,112 @@ namespace batteries {
 
 namespace net {
 
-Query::Query()
-    : mQuery()
-    , mRawQuery()
-    , mForceQuery(false)
-    , mRawQueryDirty(false) {}
+query::query()
+    : query_()
+    , raw_query_()
+    , force_query_(false)
+    , raw_query_dirty_(false) {}
 
-Query::Query(std::string query)
-    : mQuery()
-    , mRawQuery()
-    , mForceQuery(false)
-    , mRawQueryDirty(false) {
+query::query(std::string query)
+    : query_()
+    , raw_query_()
+    , force_query_(false)
+    , raw_query_dirty_(false) {
     parse(query);
 }
 
-Query::Query(const QueryValues& values)
-    : mQuery()
-    , mRawQuery()
-    , mForceQuery(false)
-    , mRawQueryDirty(false) {
+query::query(const query_values& values)
+    : query_()
+    , raw_query_()
+    , force_query_(false)
+    , raw_query_dirty_(false) {
     for (auto& value : values) {
-        mQuery.emplace(value);
+        query_.emplace(value);
     }
-    mRawQuery = internal::buildQuery(values.cbegin(), values.cend());
+    raw_query_ = internal::build_query(values.cbegin(), values.cend());
 }
 
-UrlError Query::parse(std::string query) {
-    mRawQuery = std::move(query);
-    mQuery.clear();
-    UrlError err;
-    std::tie(mQuery, err) = internal::parseQuery(mRawQuery);
+error query::parse(std::string query) {
+    raw_query_ = std::move(query);
+    query_.clear();
+    error err;
+    std::tie(query_, err) = internal::parse_query(raw_query_);
 
     return err;
 }
 
-std::string Query::toString() const {
-    if (mRawQueryDirty) { // Rebuild raw query
-        const_cast<Query*>(this)->mRawQuery =
-            internal::buildQuery(mQuery.cbegin(), mQuery.cend());
-        const_cast<Query*>(this)->mRawQueryDirty = false;
+std::string query::to_string() const {
+    if (raw_query_dirty_) { // Rebuild raw query
+        const_cast<query*>(this)->raw_query_ =
+            internal::build_query(query_.cbegin(), query_.cend());
+        const_cast<query*>(this)->raw_query_dirty_ = false;
     }
 
-    if (mRawQuery.empty()) {
+    if (raw_query_.empty()) {
         // if forced return the question mark
-        if (mForceQuery) {
+        if (force_query_) {
             return "?";
         }
         // return empty string
-        return mRawQuery;
+        return raw_query_;
     }
 
     // Return with question mark
-    return absl::StrCat("?", mRawQuery);
+    return absl::StrCat("?", raw_query_);
 }
 
-void Query::setForceQuery(bool force) { mForceQuery = force; }
+void query::set_force_query(bool force) { force_query_ = force; }
 
-bool Query::forceQuery() const { return mForceQuery; }
+bool query::force_query() const { return force_query_; }
 
-void Query::set(std::string key, std::string value) {
-    mRawQueryDirty = true;
-    mQuery.erase(key);
-    mQuery.insert(std::make_pair(key, value));
+void query::set(std::string key, std::string value) {
+    raw_query_dirty_ = true;
+    query_.erase(key);
+    query_.insert(std::make_pair(key, value));
 }
 
-void Query::add(QueryValue value) {
-    mRawQueryDirty = true;
-    mQuery.insert(value);
+void query::add(query_value value) {
+    raw_query_dirty_ = true;
+    query_.insert(value);
 }
 
-void Query::add(std::string key, std::string value) {
-    mRawQueryDirty = true;
-    mQuery.insert(std::make_pair(key, value));
+void query::add(std::string key, std::string value) {
+    raw_query_dirty_ = true;
+    query_.insert(std::make_pair(key, value));
 }
 
-void Query::del(std::string key) {
-    mRawQueryDirty = true;
-    mQuery.erase(key);
+void query::del(std::string key) {
+    raw_query_dirty_ = true;
+    query_.erase(key);
 }
 
-QueryValues Query::values() const {
-    QueryValues values;
-    for (auto& elem : mQuery) {
+query_values query::values() const {
+    query_values values;
+    for (auto& elem : query_) {
         values.push_back(elem);
     }
     return values;
 }
 
-QueryValues Query::get(std::string key) const {
-    QueryValues values;
-    auto it = mQuery.find(key);
-    while (it != mQuery.end()) {
+query_values query::get(std::string key) const {
+    query_values values;
+    auto it = query_.find(key);
+    while (it != query_.end()) {
         values.push_back(*it++);
     }
 
     return values;
 }
 
-bool Query::empty() const { return mQuery.empty(); }
+bool query::empty() const { return query_.empty(); }
 
-std::size_t Query::size() const { return mQuery.size(); }
+std::size_t query::size() const { return query_.size(); }
 
-bool Query::operator==(const Query& rhs) const {
-    return (mQuery == rhs.mQuery);
+bool query::operator==(const query& rhs) const {
+    return (query_ == rhs.query_);
 }
 
-bool Query::operator!=(const Query& rhs) const { return !(*this == rhs); }
+bool query::operator!=(const query& rhs) const { return !(*this == rhs); }
 
 } // namespace net
 

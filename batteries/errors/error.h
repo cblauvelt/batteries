@@ -21,64 +21,123 @@ namespace batteries {
 
 namespace errors {
 
-enum class GenericErrorCode { NoError = 0, GenericError };
+enum class generic_error_code { no_error = 0, generic_error };
+}
 
-template <typename T = GenericErrorCode> class Error {
+} // namespace batteries
+
+namespace std {
+// Tell the C++ STL metaprogramming that enum generic_error_code
+// is registered with the standard error code system
+template <>
+struct is_error_code_enum<batteries::errors::generic_error_code> : true_type {};
+} // namespace std
+
+namespace batteries {
+
+namespace errors {
+
+std::error_code make_error_code(generic_error_code);
+
+class error {
 
   public:
-    Error();
-    Error(T errorCode, std::string message);
-    Error(std::string message);
+    error()
+        : error_code_(generic_error_code::no_error)
+        , message_() {}
 
-    T errorCode() const;
+    explicit error(std::error_code error_code)
+        : error_code_(error_code)
+        , message_(error_code.message()) {}
 
-    std::string message() const;
-    std::string what() const;
+    explicit error(const std::string& error_message)
+        : error_code_(generic_error_code::generic_error)
+        , message_(error_message) {}
 
-    bool operator==(const Error<T>& rhs) const;
-    bool operator!=(const Error<T>& rhs) const;
-    bool operator!() const;
+    explicit error(std::string_view error_message)
+        : error_code_(generic_error_code::generic_error)
+        , message_(error_message) {}
 
-    explicit operator bool() const { return (mErrorCode != static_cast<T>(0)); }
+    explicit error(const char* error_message)
+        : error_code_(generic_error_code::generic_error)
+        , message_(error_message) {}
 
-    friend std::ostream& operator<<(std::ostream& os, const Error<T>& error) {
-        return os << "error_code: " << (int)error.mErrorCode
-                  << ", message: " << error.mMessage;
+    explicit error(std::error_code error_code, const std::string& error_message)
+        : error_code_(error_code)
+        , message_(error_message) {}
+
+    explicit error(std::error_code error_code, std::string_view error_message)
+        : error_code_(error_code)
+        , message_(error_message) {}
+
+    explicit error(std::error_code error_code, const char* error_message)
+        : error_code_(error_code)
+        , message_(error_message) {}
+
+    std::error_code error_code() const noexcept { return error_code_; }
+
+    int value() const noexcept { return error_code_.value(); }
+
+    const std::error_category& category() const noexcept {
+        return error_code_.category();
+    }
+
+    std::string message() const { return message_; }
+
+    std::string what() const { return message(); }
+
+    std::runtime_error as_exception() const {
+        return std::runtime_error(what());
+    }
+
+    bool operator==(const error& rhs) const {
+        return (error_code_ == rhs.error_code_ && message_ == rhs.message_);
+    }
+
+    bool operator==(const std::error_code& rhs) const {
+        return (error_code_.value() == rhs.value() &&
+                message_ == rhs.message());
+    }
+
+    bool operator!=(const error& rhs) const { return !(*this == rhs); }
+
+    bool operator!() const { return !((bool)*this); }
+
+    explicit operator bool() const { return (error_code_.value() != 0); }
+
+    friend std::ostream& operator<<(std::ostream& os, const error& error) {
+        return os << "error_code: " << error.error_code_
+                  << ", message: " << error.message_;
     }
 
   private:
-    T mErrorCode;
-    std::string mMessage;
+    std::error_code error_code_;
+    std::string message_;
 };
 
-static const Error<> NoError;
+static const error no_error;
 
-template <typename T>
-Error<T>::Error()
-    : mErrorCode(static_cast<T>(0))
-    , mMessage() {}
+namespace detail {
 
-template <typename T>
-Error<T>::Error(T errorCode, std::string message)
-    : mErrorCode(errorCode)
-    , mMessage(message) {}
+struct generic_error_category : std::error_category {
+    const char* name() const noexcept override { return "generic_error_code"; }
 
-template <typename T> T Error<T>::errorCode() const { return mErrorCode; }
+    std::string message(int ev) const override {
+        switch (static_cast<generic_error_code>(ev)) {
+        case generic_error_code::generic_error:
+            return "Generic error type";
+        default:
+            return "(unrecognized error)";
+        }
+    }
+};
 
-template <typename T> std::string Error<T>::message() const { return mMessage; }
+const generic_error_category theGenericErrorCategory{};
 
-template <typename T> std::string Error<T>::what() const { return message(); }
+} // namespace detail
 
-template <typename T> bool Error<T>::operator==(const Error<T>& rhs) const {
-    return (mErrorCode == rhs.mErrorCode && mMessage == rhs.mMessage);
-}
-
-template <typename T> bool Error<T>::operator!=(const Error<T>& rhs) const {
-    return !(*this == rhs);
-}
-
-template <typename T> bool Error<T>::operator!() const {
-    return !((bool)*this);
+inline std::error_code make_error_code(generic_error_code e) {
+    return {static_cast<int>(e), detail::theGenericErrorCategory};
 }
 
 } // namespace errors

@@ -20,24 +20,35 @@ namespace batteries {
 
 namespace net {
 
-UrlError UrlParseError(std::string_view s) {
-    return UrlError(UrlErrorCode::ParseError, absl::StrCat("Parse Error: ", s));
-}
+namespace detail {
 
-UrlError UrlEscapeError(std::string_view s) {
-    return UrlError(UrlErrorCode::EscapeError,
-                    absl::StrCat("Escape Error: ", s));
-}
+struct url_error_category : std::error_category {
+    const char* name() const noexcept override { return "url_error_code"; }
 
-UrlError UrlInvalidHostError(std::string_view s) {
-    return UrlError(UrlErrorCode::InvalidHostError,
-                    absl::StrCat("Invalid host error: ", s));
-}
+    std::string message(int ev) const override {
+        switch (static_cast<url_error_code>(ev)) {
+        case url_error_code::no_error:
+            return "Success";
+        case url_error_code::parse_error:
+            return "Parse Error";
+        case url_error_code::escape_error:
+            return "Escape Error";
+        case url_error_code::invalid_host_error:
+            return "Invalid host error";
+        case url_error_code::range_error:
+            return "The sequence '%' was not followed by two characters";
+        default:
+            return "(unrecognized error)";
+        }
+    }
+};
 
-UrlError UrlRangeError(std::string_view s) {
-    return UrlError(
-        UrlErrorCode::RangeError,
-        absl::StrCat("'%' was not followed by two characters: ", s));
+const url_error_category theUrlErrorCategory{};
+
+} // namespace detail
+
+std::error_code make_error_code(url_error_code e) {
+    return {static_cast<int>(e), detail::theUrlErrorCategory};
 }
 
 } // namespace net

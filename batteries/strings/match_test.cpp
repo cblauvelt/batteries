@@ -30,9 +30,9 @@ TEST(Strings, Contains) {
 TEST(Strings, ContainsControlChar) {
     std::string testString =
         "Why is this text so far to the right? \t\t\t\t\t text";
-    EXPECT_TRUE(batteries::strings::containsCtlChar(testString));
+    EXPECT_TRUE(batteries::strings::contains_ctl_char(testString));
     testString = "No control chars";
-    EXPECT_FALSE(batteries::strings::containsCtlChar(testString));
+    EXPECT_FALSE(batteries::strings::contains_ctl_char(testString));
 }
 
 } // namespace

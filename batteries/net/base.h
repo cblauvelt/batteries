@@ -27,29 +27,37 @@ namespace batteries {
 
 namespace net {
 
-enum class UrlErrorCode {
-    NoError = 0,
-    ParseError,
-    EscapeError,
-    InvalidHostError,
-    RangeError,
+enum class url_error_code {
+    no_error = 0,
+    parse_error,
+    escape_error,
+    invalid_host_error,
+    range_error,
 };
 
 // Define types
-using QueryValue = std::pair<std::string, std::string>;
-using QueryValues = std::vector<QueryValue>;
-using UrlError = errors::Error<UrlErrorCode>;
+using query_value = std::pair<std::string, std::string>;
+using query_values = std::vector<query_value>;
+using error = errors::error;
 using byte = unsigned char;
 
-// Errors
-UrlError UrlParseError(std::string_view s);
-UrlError UrlEscapeError(std::string_view s);
-UrlError UrlInvalidHostError(std::string_view s);
-UrlError UrlRangeError(std::string_view s);
-
-// Define constanst
-const UrlError UrlNoError = UrlError();
-
 } // namespace net
+
+} // namespace batteries
+
+namespace std {
+// Tell the C++ STL metaprogramming that enum ModbusErrorCode
+// is registered with the standard error code system
+template <>
+struct is_error_code_enum<batteries::net::url_error_code> : true_type {};
+} // namespace std
+
+namespace batteries {
+
+namespace net {
+
+std::error_code make_error_code(batteries::net::url_error_code);
+
+}
 
 } // namespace batteries
