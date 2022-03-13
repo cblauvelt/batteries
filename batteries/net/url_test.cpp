@@ -25,8 +25,6 @@ using query_map = batteries::net::internal::query_map;
 using url_error = batteries::errors::error;
 using batteries::net::url_error_code;
 
-const auto no_error = batteries::errors::no_error;
-
 // Test shouldEscape
 
 struct should_escape_test {
@@ -130,24 +128,25 @@ TEST_P(MultipleUnescapeTests, Unescape) {
     // Test Queries
     std::tie(path, err) = batteries::net::unescape_query(GetParam().in);
     EXPECT_EQ(GetParam().error.message(), err.message());
-    EXPECT_EQ(GetParam().error.error_code(), err.error_code());
+    EXPECT_EQ(GetParam().error, err);
     EXPECT_EQ(GetParam().out, path);
 
     // Test Paths - Requires a special case for '+'
     path = absl::StrReplaceAll(GetParam().in, {{"+", "%20"}});
     std::tie(path, err) = batteries::net::unescape_path(path);
     EXPECT_EQ(GetParam().error.message(), err.message());
-    EXPECT_EQ(GetParam().error.error_code(), err.error_code());
+    EXPECT_EQ(GetParam().error, err);
     EXPECT_EQ(GetParam().out, path);
 }
 
 INSTANTIATE_TEST_SUITE_P(
     EscapeTests, MultipleUnescapeTests,
     ::testing::Values(
-        EscapeTest{"", "", no_error}, EscapeTest{"abc", "abc", no_error},
-        EscapeTest{"1%41", "1A", no_error},
-        EscapeTest{"1%41%42%43", "1ABC", no_error},
-        EscapeTest{"%4a", "J", no_error}, EscapeTest{"%6F", "o", no_error},
+        EscapeTest{"", "", url_error{}}, EscapeTest{"abc", "abc", url_error{}},
+        EscapeTest{"1%41", "1A", url_error{}},
+        EscapeTest{"1%41%42%43", "1ABC", url_error{}},
+        EscapeTest{"%4a", "J", url_error{}},
+        EscapeTest{"%6F", "o", url_error{}},
         EscapeTest{"%", "", url_error(url_error_code::range_error, "%")},
         EscapeTest{"%a", "", url_error(url_error_code::range_error, "%a")},
         EscapeTest{"%1", "", url_error(url_error_code::range_error, "%1")},
@@ -155,8 +154,8 @@ INSTANTIATE_TEST_SUITE_P(
                    url_error(url_error_code::range_error, "123%45%6")},
         EscapeTest{"%zzzzz", "",
                    url_error(url_error_code::escape_error, "%zz")},
-        EscapeTest{"a+b", "a b", no_error},
-        EscapeTest{"a%20b", "a b", no_error}));
+        EscapeTest{"a+b", "a b", url_error{}},
+        EscapeTest{"a%20b", "a b", url_error{}}));
 
 // Test escape_query
 
@@ -170,13 +169,13 @@ TEST_P(MultipleEscapeQueryTests, EscapeQuery) {
 INSTANTIATE_TEST_SUITE_P(
     EscapeTests, MultipleEscapeQueryTests,
     ::testing::Values(
-        EscapeTest{"", "", no_error}, EscapeTest{"abc", "abc", no_error},
-        EscapeTest{"one two", "one+two", no_error},
-        EscapeTest{"10%", "10%25", no_error},
+        EscapeTest{"", "", url_error{}}, EscapeTest{"abc", "abc", url_error{}},
+        EscapeTest{"one two", "one+two", url_error{}},
+        EscapeTest{"10%", "10%25", url_error{}},
         EscapeTest{" ?&=#+%!<>#\"{}|\\^[]`☺\t:/@$'()*,;",
                    "+%3F%26%3D%23%2B%25%21%3C%3E%23%22%7B%7D%7C%5C%5E%5B%5D%60%"
                    "E2%98%BA%09%3A%2F%40%24%27%28%29%2A%2C%3B",
-                   no_error}));
+                   url_error{}}));
 
 // Test escape_path
 
@@ -190,15 +189,15 @@ TEST_P(MultipleEscapePathTests, EscapePath) {
 INSTANTIATE_TEST_SUITE_P(
     EscapeTests, MultipleEscapePathTests,
     ::testing::Values(
-        EscapeTest{"", "", no_error}, EscapeTest{"abc", "abc", no_error},
-        EscapeTest{"abc+def", "abc+def", no_error},
-        EscapeTest{"a/b", "a%2Fb", no_error},
-        EscapeTest{"one two", "one%20two", no_error},
-        EscapeTest{"10%", "10%25", no_error},
+        EscapeTest{"", "", url_error{}}, EscapeTest{"abc", "abc", url_error{}},
+        EscapeTest{"abc+def", "abc+def", url_error{}},
+        EscapeTest{"a/b", "a%2Fb", url_error{}},
+        EscapeTest{"one two", "one%20two", url_error{}},
+        EscapeTest{"10%", "10%25", url_error{}},
         EscapeTest{" ?&=#+%!<>#\"{}|\\^[]`☺\t:/@$'()*,;",
                    "%20%3F&=%23+%25%21%3C%3E%23%22%7B%7D%7C%5C%5E%5B%5D%60%E2%"
                    "98%BA%09:%2F@$%27%28%29%2A%2C%3B",
-                   no_error}));
+                   url_error{}}));
 
 struct ParseHostTest {
     std::string in;
@@ -229,27 +228,27 @@ TEST_P(MultipleParseHostTests, ParseHostTest) {
 INSTANTIATE_TEST_SUITE_P(
     ParseHostTest, MultipleParseHostTests,
     ::testing::Values(
-        ParseHostTest{"foo.com:80", "foo.com", "80", no_error},
-        ParseHostTest{"foo.com", "foo.com", "", no_error},
-        ParseHostTest{"foo.com:", "foo.com", "", no_error},
+        ParseHostTest{"foo.com:80", "foo.com", "80", url_error{}},
+        ParseHostTest{"foo.com", "foo.com", "", url_error{}},
+        ParseHostTest{"foo.com:", "foo.com", "", url_error{}},
         ParseHostTest{"FOO.COM", "FOO.COM", "",
-                      no_error}, // no canonicalization
-        ParseHostTest{"1.2.3.4", "1.2.3.4", "", no_error},
-        ParseHostTest{"1.2.3.4:80", "1.2.3.4", "80", no_error},
-        ParseHostTest{"[1:2:3:4]", "[1:2:3:4]", "", no_error},
-        ParseHostTest{"[1:2:3:4]:80", "[1:2:3:4]", "80", no_error},
-        ParseHostTest{"[::1]:80", "[::1]", "80", no_error},
-        ParseHostTest{"[::1]", "[::1]", "", no_error},
-        ParseHostTest{"[::1]:", "[::1]", "", no_error},
-        ParseHostTest{"[fe80::1%25en0]", "[fe80::1%en0]", "", no_error},
+                      url_error{}}, // no canonicalization
+        ParseHostTest{"1.2.3.4", "1.2.3.4", "", url_error{}},
+        ParseHostTest{"1.2.3.4:80", "1.2.3.4", "80", url_error{}},
+        ParseHostTest{"[1:2:3:4]", "[1:2:3:4]", "", url_error{}},
+        ParseHostTest{"[1:2:3:4]:80", "[1:2:3:4]", "80", url_error{}},
+        ParseHostTest{"[::1]:80", "[::1]", "80", url_error{}},
+        ParseHostTest{"[::1]", "[::1]", "", url_error{}},
+        ParseHostTest{"[::1]:", "[::1]", "", url_error{}},
+        ParseHostTest{"[fe80::1%25en0]", "[fe80::1%en0]", "", url_error{}},
         ParseHostTest{"[fe80::1%25en0]:8080", "[fe80::1%en0]", "8080",
-                      no_error},
+                      url_error{}},
         ParseHostTest{"[fe80::1%25%65%6e%301-._~]", "[fe80::1%en01-._~]", "",
-                      no_error},
+                      url_error{}},
         ParseHostTest{"[fe80::1%25%65%6e%301-._~]:8080", "[fe80::1%en01-._~]",
-                      "8080", no_error},
-        ParseHostTest{"localhost", "localhost", "", no_error},
-        ParseHostTest{"localhost:443", "localhost", "443", no_error},
+                      "8080", url_error{}},
+        ParseHostTest{"localhost", "localhost", "", url_error{}},
+        ParseHostTest{"localhost:443", "localhost", "443", url_error{}},
         ParseHostTest{"some.super.long.domain.example.org:8080",
                       "some.super.long.domain.example.org", "8080"},
         ParseHostTest{"[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:17000",
@@ -290,11 +289,11 @@ INSTANTIATE_TEST_SUITE_P(
     ParseAuthorityTest, MultipleParseAuthorityTests,
     ::testing::Values(
         ParseAuthorityTest{"user:password@foo.com:80", "user", "password",
-                           "foo.com:80", no_error},
-        ParseAuthorityTest{"foo.com:80", "", "", "foo.com:80", no_error},
+                           "foo.com:80", url_error{}},
+        ParseAuthorityTest{"foo.com:80", "", "", "foo.com:80", url_error{}},
         ParseAuthorityTest{// malformed host should not cause error
                            "user@password:foo.com:80", "user", "",
-                           "password:foo.com:80", no_error},
+                           "password:foo.com:80", url_error{}},
         ParseAuthorityTest{
             "us^er:password@foo.com:80", "", "", "",
             url_error(url_error_code::parse_error, "invalid userinfo")}));
@@ -330,8 +329,8 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Values(
         ParseSchemeTest{"http://root:password@192.168.1.1:8080/path/to/file",
                         "http", "//root:password@192.168.1.1:8080/path/to/file",
-                        no_error},
-        ParseSchemeTest{"file://test.txt", "file", "//test.txt", no_error}));
+                        url_error{}},
+        ParseSchemeTest{"file://test.txt", "file", "//test.txt", url_error{}}));
 
 struct ParseUrlTest {
     std::string in;
@@ -384,21 +383,22 @@ INSTANTIATE_TEST_SUITE_P(
     ParseUrlTest, MultipleParseUrlTests,
     ::testing::Values(
         ParseUrlTest{"http://foo.com", "http", "", "", "", "foo.com", "foo.com",
-                     "", "", "", batteries::net::query(), "", no_error},
+                     "", "", "", batteries::net::query(), "", url_error{}},
         ParseUrlTest{"http://foo.com/", "http", "", "", "", "foo.com",
                      "foo.com", "", "/", "", batteries::net::query(), "",
-                     no_error},
+                     url_error{}},
         ParseUrlTest{"http://foo.com/path", "http", "", "", "", "foo.com",
                      "foo.com", "", "/path", "", batteries::net::query(), "",
-                     no_error},
+                     url_error{}},
         ParseUrlTest{"http://foo.com/path%20escaped", "http", "", "", "",
                      "foo.com", "foo.com", "", "/path escaped",
-                     "/path%20escaped", batteries::net::query(), "", no_error},
+                     "/path%20escaped", batteries::net::query(), "",
+                     url_error{}},
         ParseUrlTest{"http://foo.com/path?a=1&b=2", "http", "", "", "",
                      "foo.com", "foo.com", "", "/path", "",
                      batteries::net::query(batteries::net::query_values{
                          {"a", "1"}, {"b", "2"}}),
-                     "", no_error},
+                     "", url_error{}},
         ParseUrlTest{
             "/",                     // in
             "",                      // scheme
@@ -412,7 +412,7 @@ INSTANTIATE_TEST_SUITE_P(
             "",                      // raw_path
             batteries::net::query(), // query
             "",                      // fragment
-            no_error                 // error
+            url_error{}              // error
         },
         ParseUrlTest{
             "*",                     // in
@@ -427,7 +427,7 @@ INSTANTIATE_TEST_SUITE_P(
             "",                      // raw_path
             batteries::net::query(), // query
             "",                      // fragment
-            no_error                 // error
+            url_error{}              // error
         },
         ParseUrlTest{
             "http://192.168.0.1:8080/", // in
@@ -442,7 +442,7 @@ INSTANTIATE_TEST_SUITE_P(
             "",                         // raw_path
             batteries::net::query(),    // query
             "",                         // fragment
-            no_error                    // error
+            url_error{}                 // error
         },
         ParseUrlTest{
             "http://192.168.0.1:8080/?a=1&b=2", // in
@@ -458,7 +458,7 @@ INSTANTIATE_TEST_SUITE_P(
             batteries::net::query(batteries::net::query_values{
                 {"a", "1"}, {"b", "2"}}), // query
             "",                           // fragment
-            no_error                      // error
+            url_error{}                   // error
         },
         ParseUrlTest{
             "http://[fe80::1]/",     // in
@@ -473,7 +473,7 @@ INSTANTIATE_TEST_SUITE_P(
             "",                      // raw_path
             batteries::net::query(), // query
             "",                      // fragment
-            no_error                 // error
+            url_error{}              // error
         },
         ParseUrlTest{
             "http://[fe80::1]:8080/", // in
@@ -488,7 +488,7 @@ INSTANTIATE_TEST_SUITE_P(
             "",                       // raw_path
             batteries::net::query(),  // query
             "",                       // fragment
-            no_error                  // error
+            url_error{}               // error
         },
         ParseUrlTest{
             "http://[fe80::1]:8080/?a=1&b=2", // in
@@ -504,13 +504,13 @@ INSTANTIATE_TEST_SUITE_P(
             batteries::net::query(batteries::net::query_values{
                 {"a", "1"}, {"b", "2"}}), // query
             "",                           // fragment
-            no_error                      // error
+            url_error{}                   // error
         },
         ParseUrlTest{
             "http://root:password@192.168.1.1:8080/path/to/file#nonsense",
             "http", "", "root", "password", "192.168.1.1:8080", "192.168.1.1",
             "8080", "/path/to/file", "", batteries::net::query(), "nonsense",
-            no_error},
+            url_error{}},
         ParseUrlTest{
             "http://[fe80::1%25en0]/", // in
             "http",                    // scheme
@@ -524,7 +524,7 @@ INSTANTIATE_TEST_SUITE_P(
             "",                        // raw_path
             batteries::net::query(),   // query
             "",                        // fragment
-            no_error                   // error
+            url_error{}                // error
         },
         ParseUrlTest{
             "http://[fe80::1%25en0]:8080/", // in
@@ -539,7 +539,7 @@ INSTANTIATE_TEST_SUITE_P(
             "",                             // raw_path
             batteries::net::query(),        // query
             "",                             // fragment
-            no_error                        // error
+            url_error{}                     // error
         },
         ParseUrlTest{
             "http://[fe80::1%25%65%6e%301-._~]/", // in
@@ -554,7 +554,7 @@ INSTANTIATE_TEST_SUITE_P(
             "",                                   // raw_path
             batteries::net::query(),              // query
             "",                                   // fragment
-            no_error                              // error
+            url_error{}                           // error
         },
         ParseUrlTest{
             "http://[fe80::1%25%65%6e%301-._~]:8080/", // in
@@ -569,7 +569,7 @@ INSTANTIATE_TEST_SUITE_P(
             "",                                        // raw_path
             batteries::net::query(),                   // query
             "",                                        // fragment
-            no_error                                   // error
+            url_error{}                                // error
         },
         ParseUrlTest{
             "foo.html",              // in
@@ -584,7 +584,7 @@ INSTANTIATE_TEST_SUITE_P(
             "",                      // raw_path
             batteries::net::query(), // query
             "",                      // fragment
-            no_error                 // error
+            url_error{}              // error
         },
         ParseUrlTest{
             "../dir/",               // in
@@ -599,7 +599,7 @@ INSTANTIATE_TEST_SUITE_P(
             "",                      // raw_path
             batteries::net::query(), // query
             "",                      // fragment
-            no_error                 // error
+            url_error{}              // error
         },
         ParseUrlTest{
             "http://192.168.0.%31/",                       // in
@@ -735,7 +735,7 @@ class MultipleRoundTripTests : public ::testing::TestWithParam<RoundTripTest> {
 
 TEST_P(MultipleRoundTripTests, RoundTripTests) {
     url_error err = url.parse(GetParam());
-    EXPECT_EQ(err, no_error);
+    EXPECT_EQ(err, url_error{});
     EXPECT_EQ(GetParam(), url.to_string());
 }
 

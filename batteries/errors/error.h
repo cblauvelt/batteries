@@ -17,6 +17,8 @@
 #include <ostream>
 #include <string>
 
+#include <absl/strings/str_cat.h>
+
 namespace batteries {
 
 namespace errors {
@@ -37,7 +39,30 @@ namespace batteries {
 
 namespace errors {
 
-std::error_code make_error_code(generic_error_code);
+namespace detail {
+
+struct generic_error_category : std::error_category {
+    const char* name() const noexcept override { return "generic_error_code"; }
+
+    std::string message(int ev) const override {
+        switch (static_cast<generic_error_code>(ev)) {
+        case generic_error_code::no_error:
+            return "Success";
+        case generic_error_code::generic_error:
+            return "Generic error type";
+        default:
+            return "(unrecognized error)";
+        }
+    }
+};
+
+static const generic_error_category theGenericErrorCategory{};
+
+} // namespace detail
+
+inline std::error_code make_error_code(generic_error_code e) {
+    return {static_cast<int>(e), detail::theGenericErrorCategory};
+}
 
 class error {
 
@@ -82,7 +107,15 @@ class error {
         return error_code_.category();
     }
 
-    std::string message() const { return message_; }
+    std::string message() const {
+        if (message_.empty()) {
+            return error_code_.message();
+        } else if (error_code_.message().empty()) {
+            return message_;
+        } else {
+            return absl::StrCat(error_code_.message(), ": ", message_);
+        }
+    }
 
     std::string what() const { return message(); }
 
@@ -91,23 +124,23 @@ class error {
     }
 
     bool operator==(const error& rhs) const {
-        return (error_code_ == rhs.error_code_ && message_ == rhs.message_);
+        return (error_code_.value() ==
+                rhs.error_code_.value()); // && message_ == rhs.message_);
     }
 
     bool operator==(const std::error_code& rhs) const {
-        return (error_code_.value() == rhs.value() &&
-                message_ == rhs.message());
+        return (error_code_.value() == rhs.value());
     }
 
     bool operator!=(const error& rhs) const { return !(*this == rhs); }
 
-    bool operator!() const { return !((bool)*this); }
+    explicit operator bool() const { return (bool)error_code_; }
 
-    explicit operator bool() const { return (error_code_.value() != 0); }
+    bool operator!() const { return !((bool)*this); }
 
     friend std::ostream& operator<<(std::ostream& os, const error& error) {
         return os << "error_code: " << error.error_code_
-                  << ", message: " << error.message_;
+                  << ", message: " << error.message();
     }
 
   private:
@@ -116,29 +149,6 @@ class error {
 };
 
 static const error no_error;
-
-namespace detail {
-
-struct generic_error_category : std::error_category {
-    const char* name() const noexcept override { return "generic_error_code"; }
-
-    std::string message(int ev) const override {
-        switch (static_cast<generic_error_code>(ev)) {
-        case generic_error_code::generic_error:
-            return "Generic error type";
-        default:
-            return "(unrecognized error)";
-        }
-    }
-};
-
-const generic_error_category theGenericErrorCategory{};
-
-} // namespace detail
-
-inline std::error_code make_error_code(generic_error_code e) {
-    return {static_cast<int>(e), detail::theGenericErrorCategory};
-}
 
 } // namespace errors
 

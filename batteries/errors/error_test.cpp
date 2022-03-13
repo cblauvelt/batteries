@@ -29,7 +29,8 @@ TEST(Errors, DefaultError) {
     EXPECT_TRUE(!error);
 
     EXPECT_EQ(errorWithMessage.message(), errorWithMessage.what());
-    EXPECT_EQ(errorWithMessage.message(), errorMessage);
+    EXPECT_EQ(errorWithMessage.message(),
+              std::string("Generic error type: ") + errorMessage);
     EXPECT_EQ(errorWithMessage.value(),
               (int)batteries::errors::generic_error_code::generic_error);
     EXPECT_TRUE(errorWithMessage);
@@ -48,7 +49,8 @@ TEST(Errors, CustomError) {
     EXPECT_TRUE(!error);
 
     EXPECT_EQ(errorWithMessage.message(), errorWithMessage.what());
-    EXPECT_EQ(errorWithMessage.message(), errorMessage);
+    EXPECT_EQ(errorWithMessage.message(),
+              std::string("Generic error type: ") + errorMessage);
     EXPECT_EQ(errorWithMessage.value(),
               (int)batteries::errors::generic_error_code::generic_error);
     EXPECT_TRUE(errorWithMessage);
