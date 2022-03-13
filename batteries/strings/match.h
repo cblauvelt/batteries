@@ -44,11 +44,11 @@ unsigned int count(std::string_view s, std::string_view searchTerm) {
 }
 
 /**
- * @brief containsCtlChar searched candidate for a control character.
+ * @brief contains_ctl_char searched candidate for a control character.
  * @param candidate The string to search for control characters.
  * @returns true if candidate contains a control character, otherwise false.
  */
-bool containsCtlChar(std::string_view candidate) {
+bool contains_ctl_char(std::string_view candidate) {
     for (auto c : candidate) {
         if (absl::ascii_iscntrl(c)) {
             return true;

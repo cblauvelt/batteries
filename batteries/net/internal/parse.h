@@ -30,7 +30,7 @@ namespace net {
 
 namespace internal {
 
-using QueryMap = std::multimap<std::string, std::string>;
+using query_map = std::multimap<std::string, std::string>;
 
 /**
  * @brief splits a string into two and only two parts at "match". If cutMatch is
@@ -46,7 +46,7 @@ split(std::string_view s, std::string_view match, bool cutMatch);
  * @brief Determine if the port, if present, is a valid port number
  * @param port A string_view substring of the port portion of the URL.
  */
-bool validOptionalPort(std::string_view port);
+bool valid_optional_port(std::string_view port);
 
 /**
  * @brief reports whether s is a valid userinfo string per RFC 3986
@@ -62,7 +62,7 @@ bool validOptionalPort(std::string_view port);
  * @param s A string that reperesents the user info contained within a URL.
  * Usually of the form "username:password"
  */
-bool validUserinfo(std::string_view s);
+bool valid_userinfo(std::string_view s);
 
 /**
  * @brief Takes a raw url that may contain the form path?query#fragment
@@ -70,8 +70,8 @@ bool validUserinfo(std::string_view s);
  * @param rawurl The url that may contain a fragment section.
  * @returns If there is a fragment found, returns fragment,path; else "",rawurl.
  */
-std::tuple<std::string, std::string_view, UrlError>
-parseFragment(std::string_view rawurl);
+std::tuple<std::string, std::string_view, error>
+parse_fragment(std::string_view rawurl);
 
 /**
  * @brief Takes a raw url that may contain the form scheme:path
@@ -79,42 +79,42 @@ parseFragment(std::string_view rawurl);
  * @param rawurl The url that may contain a scheme section.
  * @returns If there is a scheme found, returns scheme,path; else "",rawurl.
  */
-std::tuple<std::string, std::string_view, UrlError>
-parseScheme(std::string_view rawurl);
+std::tuple<std::string, std::string_view, error>
+parse_scheme(std::string_view rawurl);
 
 /**
- * @brief parseAuthority takes a string of form [userinfo@]host] and returns
+ * @brief parse_authority takes a string of form [userinfo@]host] and returns
  * The username and password, if any, and the string_view to pass on to
- * parseHost.
+ * parse_host.
  *
  * @param authority a string_view of the form [userinfo@]host].
  * @returns The username, password, and the host portion of the input.
  */
-std::tuple<std::string, std::string, std::string_view, UrlError>
-parseAuthority(std::string_view authority);
+std::tuple<std::string, std::string, std::string_view, error>
+parse_authority(std::string_view authority);
 
 /**
- * @brief parseHost parses the portion of the URL that contains the DNS or IP
+ * @brief parse_host parses the portion of the URL that contains the DNS or IP
  * address and, optionally, the port.
  * @param host The portion of the URL that contains the hostname information.
  * @returns A tuple containing the hostname, port number, and error if any.
  */
-std::tuple<std::string, std::string, UrlError> parseHost(std::string_view host);
+std::tuple<std::string, std::string, error> parse_host(std::string_view host);
 
 /**
  * @brief Takes a raw query and converts it to a multimap of the values.
  * @param query The raw query to be parsed.
  * @returns A multimap[key] = []{value1, value2, ...}.
- * @returns UrlError indicating an error while parsing if any.
+ * @returns error indicating an error while parsing if any.
  */
-std::tuple<QueryMap, UrlError> parseQuery(std::string_view query);
+std::tuple<query_map, error> parse_query(std::string_view query);
 
 /**
  * @brief Takes vector of key value pairs and build a query string.
  * @param begin A const_iterator to the begining of the values.
  * @param end A const_iterator to the end of the values.
  */
-template <typename T> std::string buildQuery(T begin, T end) {
+template <typename T> std::string build_query(T begin, T end) {
     std::ostringstream buf;
     for (auto it = begin; it != end; ++it) {
         auto key = escape(it->first, encoding::encodeQueryComponent);

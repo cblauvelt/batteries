@@ -21,36 +21,38 @@ namespace {
 
 TEST(Errors, DefaultError) {
     std::string errorMessage = "Test Message";
-    batteries::errors::Error<> error;
-    batteries::errors::Error<> errorWithMessage(
-        batteries::errors::GenericErrorCode::GenericError, errorMessage);
+    batteries::errors::error error;
+    batteries::errors::error errorWithMessage(errorMessage);
 
-    EXPECT_EQ(error, batteries::errors::NoError);
+    EXPECT_EQ(error, batteries::errors::no_error);
     EXPECT_FALSE(error);
     EXPECT_TRUE(!error);
 
     EXPECT_EQ(errorWithMessage.message(), errorWithMessage.what());
-    EXPECT_EQ(errorWithMessage.message(), errorMessage);
-    EXPECT_EQ(errorWithMessage.errorCode(),
-              batteries::errors::GenericErrorCode::GenericError);
+    EXPECT_EQ(errorWithMessage.message(),
+              std::string("Generic error type: ") + errorMessage);
+    EXPECT_EQ(errorWithMessage.value(),
+              (int)batteries::errors::generic_error_code::generic_error);
     EXPECT_TRUE(errorWithMessage);
     EXPECT_FALSE(!errorWithMessage);
 }
 
 TEST(Errors, CustomError) {
-    enum class CustomErrorCode { NoError = 0, BadError, ThisIsUnneccesary };
     std::string errorMessage = "Test Message";
-    batteries::errors::Error<CustomErrorCode> error;
-    batteries::errors::Error<CustomErrorCode> errorWithMessage(
-        CustomErrorCode::BadError, errorMessage);
+    batteries::errors::error error;
+    batteries::errors::error errorWithMessage(
+        batteries::errors::generic_error_code::generic_error, errorMessage);
 
-    EXPECT_EQ(error.errorCode(), CustomErrorCode::NoError);
+    EXPECT_EQ(error.value(),
+              (int)batteries::errors::generic_error_code::no_error);
     EXPECT_FALSE(error);
     EXPECT_TRUE(!error);
 
     EXPECT_EQ(errorWithMessage.message(), errorWithMessage.what());
-    EXPECT_EQ(errorWithMessage.message(), errorMessage);
-    EXPECT_EQ(errorWithMessage.errorCode(), CustomErrorCode::BadError);
+    EXPECT_EQ(errorWithMessage.message(),
+              std::string("Generic error type: ") + errorMessage);
+    EXPECT_EQ(errorWithMessage.value(),
+              (int)batteries::errors::generic_error_code::generic_error);
     EXPECT_TRUE(errorWithMessage);
     EXPECT_FALSE(!errorWithMessage);
 }

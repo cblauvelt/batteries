@@ -60,7 +60,7 @@ bool shouldEscape(byte c, encoding mode);
  * @param mode The portion of the URL that is evaluated
  * @returns The decoded string and an error if any
  */
-std::tuple<std::string, UrlError> unescape(std::string_view s, encoding mode);
+std::tuple<std::string, error> unescape(std::string_view s, encoding mode);
 
 /**
  * @brief escapes a string; the mode specifies

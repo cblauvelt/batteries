@@ -135,8 +135,8 @@ bool shouldEscape(byte c, encoding mode) {
     return true;
 }
 
-std::tuple<std::string, UrlError> unescape(std::string_view s,
-                                           internal::encoding mode) {
+std::tuple<std::string, error> unescape(std::string_view s,
+                                        internal::encoding mode) {
     // Count %, check that they're well-formed.
     int n = 0;
     bool hasPlus = false;
@@ -150,7 +150,8 @@ std::tuple<std::string, UrlError> unescape(std::string_view s,
                 if (!absl::ascii_isxdigit(s.at(i + 1)) ||
                     !absl::ascii_isxdigit(s.at(i + 2))) {
                     s = s.substr(i, i + 3);
-                    return std::make_tuple("", UrlEscapeError(s));
+                    return std::make_tuple(
+                        "", error(url_error_code::escape_error, s));
                 }
                 // Per https://tools.ietf.org/html/rfc3986#page-21
                 // in the host component %-encoding can only be used
@@ -162,7 +163,8 @@ std::tuple<std::string, UrlError> unescape(std::string_view s,
                     internal::unhex(s.at(i + 1)) < 8 &&
                     s.substr(i, i + 3) != "%25") {
                     return std::make_tuple("",
-                                           UrlEscapeError(s.substr(i, i + 3)));
+                                           error(url_error_code::escape_error,
+                                                 s.substr(i, i + 3)));
                 }
                 if (mode == internal::encoding::encodeZone) {
                     // RFC 6874 says basically "anything goes" for zone
@@ -178,7 +180,8 @@ std::tuple<std::string, UrlError> unescape(std::string_view s,
                         internal::shouldEscape(
                             v, internal::encoding::encodeHost)) {
                         return std::make_tuple(
-                            "", UrlEscapeError(s.substr(i, i + 3)));
+                            "", error(url_error_code::escape_error,
+                                      s.substr(i, i + 3)));
                     }
                 }
                 i += 2;
@@ -191,17 +194,18 @@ std::tuple<std::string, UrlError> unescape(std::string_view s,
                      mode == internal::encoding::encodeZone) &&
                     c < 0x80 && shouldEscape(c, mode)) {
                     return std::make_tuple(
-                        "", UrlInvalidHostError(s.substr(i, i + 1)));
+                        "", error(url_error_code::invalid_host_error,
+                                  s.substr(i, i + 1)));
                 }
             }
         }
     } catch (const std::out_of_range& e) {
-        return std::make_tuple("", UrlRangeError(s));
+        return std::make_tuple("", error(url_error_code::range_error, s));
     }
 
     // There is nothing to escape
     if (n == 0 && !hasPlus) {
-        return std::make_tuple((std::string)s, UrlError());
+        return std::make_tuple((std::string)s, error());
     }
 
     try {
@@ -225,10 +229,10 @@ std::tuple<std::string, UrlError> unescape(std::string_view s,
             }
         }
     } catch (const std::out_of_range& e) {
-        return std::make_tuple("", UrlRangeError(s));
+        return std::make_tuple("", error(url_error_code::range_error, s));
     }
 
-    return std::make_tuple(retVal.str(), UrlError());
+    return std::make_tuple(retVal.str(), error());
 }
 
 std::string escape(std::string_view s, internal::encoding mode) {
