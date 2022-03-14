@@ -73,7 +73,7 @@ class BatteriesConan(ConanFile):
 
     def package(self):
         self.copy("LICENSE", dst="licenses")
-        self.copy("*.h", dst="include", src=".")
+        self.copy("*.hpp", dst="include", src=".")
         self.copy("*.inc", dst="include", src=".")
         self.copy("*.a", dst="lib", src=".", keep_path=False)
         self.copy("*.lib", dst="lib", src=".", keep_path=False)
