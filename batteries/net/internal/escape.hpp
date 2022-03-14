@@ -16,7 +16,7 @@
 
 #include <string_view>
 
-#include "batteries/net/base.h"
+#include "batteries/net/base.hpp"
 
 namespace batteries {
 

@@ -20,10 +20,10 @@
 
 #include <absl/strings/string_view.h>
 
-#include "base.h"
+#include "base.hpp"
 #include "batteries/errors/error.hpp"
-#include "internal/escape.h"
-#include "internal/parse.h"
+#include "internal/escape.hpp"
+#include "internal/parse.hpp"
 
 namespace batteries {
 

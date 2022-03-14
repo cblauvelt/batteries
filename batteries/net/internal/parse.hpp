@@ -20,9 +20,9 @@
 
 #include <absl/strings/str_cat.h>
 
-#include "batteries/net/base.h"
+#include "batteries/net/base.hpp"
 
-#include "escape.h"
+#include "escape.hpp"
 
 namespace batteries {
 

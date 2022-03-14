@@ -29,7 +29,7 @@ SOFTWARE.
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_split.h>
 
-#include "escape.h"
+#include "escape.hpp"
 
 namespace batteries {
 

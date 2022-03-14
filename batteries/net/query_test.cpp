@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "batteries/errors/error.hpp"
-#include "query.h"
+#include "query.hpp"
 
 #include <absl/strings/str_replace.h>
 

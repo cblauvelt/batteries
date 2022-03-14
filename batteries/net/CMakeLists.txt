@@ -18,11 +18,11 @@ batteries_cc_library(
 	NAME
 		net
 	HDRS
-		"base.h"
-		"internal/parse.h"
-		"internal/escape.h"
-		"url.h"
-		"query.h"
+		"base.hpp"
+		"internal/parse.hpp"
+		"internal/escape.hpp"
+		"url.hpp"
+		"query.hpp"
 	SRCS
 		"base.cpp"
 		"internal/parse.cpp"
