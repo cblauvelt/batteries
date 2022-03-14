@@ -21,7 +21,7 @@
 
 #include <absl/strings/string_view.h>
 
-#include "batteries/errors/error.h"
+#include "batteries/errors/error.hpp"
 
 namespace batteries {
 

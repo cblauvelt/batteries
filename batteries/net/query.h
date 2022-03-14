@@ -21,7 +21,7 @@
 #include <absl/strings/string_view.h>
 
 #include "base.h"
-#include "batteries/errors/error.h"
+#include "batteries/errors/error.hpp"
 #include "internal/escape.h"
 #include "internal/parse.h"
 

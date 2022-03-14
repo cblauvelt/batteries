@@ -18,7 +18,7 @@ batteries_cc_library(
   NAME
     errors
   HDRS
-    "error.h"
+    error.hpp
   COPTS
     ${BATT_DEFAULT_COPTS}
   # DEPS

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "error.h"
+#include "batteries/errors/error.hpp"
 #include "query.h"
 
 #include <absl/strings/str_replace.h>
