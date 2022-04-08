@@ -73,7 +73,7 @@ class error {
 
     explicit error(std::error_code error_code)
         : error_code_(error_code)
-        , message_(error_code.message()) {}
+        , message_() {}
 
     explicit error(const std::string& error_message)
         : error_code_(generic_error_code::generic_error)

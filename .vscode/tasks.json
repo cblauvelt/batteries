@@ -34,7 +34,7 @@
     {
       "label": "Conan Create",
       "type": "shell",
-      "command": "conan create . --build missing",
+      "command": "conan create . -s compiler.cppstd=20 --build missing",
       "problemMatcher": []
     }
   ]
