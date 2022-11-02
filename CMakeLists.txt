@@ -14,42 +14,86 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 3.15)
+#####################################
+# Define Project-Wide Settings
+#####################################
+cmake_minimum_required(VERSION 3.15.0 FATAL_ERROR)
 
+# Enables the Visibility Property on all target types
+cmake_policy(SET CMP0063 NEW)
+# Enables the MSVC_RUNTIME_LIBRARY property on targets
+cmake_policy(SET CMP0091 NEW)
 # Compiler id for Apple Clang is now AppleClang.
 cmake_policy(SET CMP0025 NEW)
-
 # if command can use IN_LIST
 cmake_policy(SET CMP0057 NEW)
-
 # Project version variables are the empty std::string if version is unspecified
 cmake_policy(SET CMP0048 NEW)
+# Define the Project Name and Description
+project(batteries LANGUAGES CXX DESCRIPTION "batteries a library to get you started")
 
-project(batteries CXX)
+# Set Project version (used for library versioning and for CPack)
+set(CMAKE_PROJECT_VERSION_MAJOR 0)
+set(CMAKE_PROJECT_VERSION_MINOR 9)
+set(CMAKE_PROJECT_VERSION_PATCH 1)
+set(CMAKE_PROJECT_VERSION ${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR}.${CMAKE_PROJECT_VERSION_PATCH})
+
+# Set required C++ Standard
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+# Generate the compile_commands.json file
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+# Set the Relative Path Configurations
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+# Configure the visibility of symbols in targets
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+# Define installation folder and the module path (this one required by conan)
+set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
+set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR} ${CMAKE_MODULE_PATH})
+set(CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR} ${CMAKE_PREFIX_PATH})
+
+#####################################
+# Define Options
+#####################################
+option(BATT_BUILD_TESTING "Build tests" FALSE)
+option(BUILD_SHARED_LIBS "Build shared libraries" FALSE)
+option(BUILD_WITH_MT "Build libraries as MultiThreaded DLL (Windows Only)" FALSE)
+
+#####################################
+# Define CMake Module Imports
+#####################################
+
+list(APPEND CMAKE_MODULE_PATH
+${CMAKE_CURRENT_LIST_DIR}/cmake
+${CMAKE_CURRENT_LIST_DIR}/batteries/copts
+)
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+include(InstallRequiredSystemLibraries)
+include(GenerateExportHeader)
+include(BatteriesInstallDirs)
+include(BatteriesHelpers)
+include(clang_format)
+include(clang_format)
+include(compiler_options)
+include(cpack)
+include(cppcheck)
+include(dependencies)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 
-set(CMAKE_CXX_STANDARD 17)
 include(CheckCXXCompilerFlag)
-include(conan.cmake)
 
-# integrate conan build process
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-    conan_cmake_run(CONANFILE conanfile.py
-                    BASIC_SETUP CMAKE_TARGETS
-                    BUILD missing)
-
-    conan_cmake_autodetect(settings)
-
-endif()
-
-if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-    include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-    conan_basic_setup()
-else()
-    message(FATAL_ERROR "The file conanbuildinfo.cmake could not be generated")
-endif()
+# if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+#     include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+#     conan_basic_setup()
+# else()
+#     message(FATAL_ERROR "The file conanbuildinfo.cmake could not be generated")
+# endif()
 
 # when batteries is included as subproject (i.e. using add_subdirectory(abseil-cpp))
 # in the source tree of a project that uses it, install rules are disabled.
@@ -58,16 +102,6 @@ if(NOT "^${CMAKE_SOURCE_DIR}$" STREQUAL "^${PROJECT_SOURCE_DIR}$")
 else()
 	set(BATT_ENABLE_INSTALL TRUE)
 endif()
-
-list(APPEND CMAKE_MODULE_PATH
-	${CMAKE_CURRENT_LIST_DIR}/CMake
-	${CMAKE_CURRENT_LIST_DIR}/batteries/copts
-)
-
-include(BatteriesInstallDirs)
-include(CMakePackageConfigHelpers)
-include(BatteriesHelpers)
-
 
 ##
 ## Using batteries targets
@@ -78,8 +112,9 @@ include(BatteriesHelpers)
 ## DO NOT rely on the internal targets outside of the prefix
 
 
-# include current path
-list(APPEND BATT_COMMON_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR})
+# include current path and dependencies
+list(APPEND BATT_COMMON_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} ${absl_INCLUDE_DIRS})
+list(APPEND BATT_COMMON_LIBS ${absl_LIBS})
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 	set(BATT_USING_CLANG ON)
@@ -87,78 +122,14 @@ else()
 	set(BATT_USING_CLANG OFF)
 endif()
 
-# find dependencies
-## pthread
-find_package(Threads REQUIRED)
-
-option(BATT_RUN_TESTS "If ON, Batteries tests will be run." ON)
-
-if(${BATT_RUN_TESTS})
-	# enable CTest.	This will set BUILD_TESTING to ON unless otherwise specified
+message("-- Testing is ${BATT_BUILD_TESTING}")
+if(${BATT_BUILD_TESTING})
+	# enable CTest.	This will set BATT_BUILD_TESTING to ON unless otherwise specified
 	# on the command line
-	include(CTest)
+    include(CTest)
 	enable_testing()
-endif()
-
-## check targets
-if(BUILD_TESTING)
-
-	list(APPEND BATT_TEST_COMMON_LIBRARIES
-		gtest_main
-		gtest
-		gmock
-		${CMAKE_THREAD_LIBS_INIT}
-	)
+	list(APPEND BATT_COMMON_INCLUDE_DIRS ${GTest_INCLUDE_DIRS})
+	list(APPEND BATT_TEST_COMMON_LIBRARIES Threads::Threads ${GTest_LIBS})
 endif()
 
 add_subdirectory(batteries)
-
-# if(BATT_ENABLE_INSTALL)
-#	 # batteries:lts-remove-begin(system installation is supported for LTS releases)
-#	 # We don't support system-wide installation
-#	 list(APPEND SYSTEM_INSTALL_DIRS "/usr/local" "/usr" "/opt/" "/opt/local" "c:/Program Files/${PROJECT_NAME}")
-#	 if(NOT DEFINED CMAKE_INSTALL_PREFIX OR CMAKE_INSTALL_PREFIX IN_LIST SYSTEM_INSTALL_DIRS)
-#		 message(WARNING "\
-#	 The default and system-level install directories are unsupported except in LTS \
-#	 releases of Batteries.	Please set CMAKE_INSTALL_PREFIX to install Batteries in your \
-#	 source or build tree directly.\
-#		 ")
-#	 endif()
-#	 # batteries:lts-remove-end
-
-#	 # install as a subdirectory only
-#	 install(EXPORT ${PROJECT_NAME}Targets
-#		 NAMESPACE batteries::
-#		 DESTINATION "${BATT_INSTALL_CONFIGDIR}"
-#	 )
-
-#	 configure_package_config_file(
-#		 CMake/battConfig.cmake.in
-#		 "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-#		 INSTALL_DESTINATION "${BATT_INSTALL_CONFIGDIR}"
-#	 )
-#	 install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-#		 DESTINATION "${BATT_INSTALL_CONFIGDIR}"
-#	 )
-
-#	 # Batteries only has a version in LTS releases.	This mechanism is accomplished
-#	 # Batteries's internal Copybara (https://github.com/google/copybara) workflows and
-#	 # isn't visible in the CMake buildsystem itself.
-#	 if(batt_VERSION)
-#		 write_basic_package_version_file(
-#			 "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-#			 COMPATIBILITY ExactVersion
-#		 )
-
-#		 install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-#			 DESTINATION ${BATT_INSTALL_CONFIGDIR}
-#		 )
-#	 endif()	# batt_VERSION
-
-#	 install(DIRECTORY batteries
-#		 DESTINATION ${BATT_INSTALL_INCLUDEDIR}
-#		 FILES_MATCHING
-#			 PATTERN "*.inc"
-#			 PATTERN "*.h"
-#	 )
-# endif()	# BATT_ENABLE_INSTALL

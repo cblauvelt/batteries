@@ -1,4 +1,3 @@
-#
 # Copyright 2019 The Batteries Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,29 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
 
-batteries_cc_library(
-  NAME
-    errors
-  HDRS
-    error.hpp
-  COPTS
-    ${BATT_DEFAULT_COPTS}
-  # DEPS
-  #   batteries::config
-  PUBLIC
-)
+set(CPACK_PACKAGE_VENDOR "The Batteries Authors")
+set(CPACK_PACKAGE_VERSION_MAJOR "${CMAKE_PROJECT_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${CMAKE_PROJECT_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${CMAKE_PROJECT_VERSION_PATCH}")
+set(CPACK_GENERATOR "ZIP;TGZ")
+set(CPACK_STRIP_FILES "TRUE")
 
-batteries_cc_test(
-  NAME
-    error_test
-  SRCS
-    "error_test.cpp"
-  COPTS
-    ${BATT_TEST_COPTS}
-  DEPS
-    batteries::errors
-		${BATT_COMMON_LIBS}
-		${BATT_TEST_COMMON_LIBRARIES}
-)
+include(CPack)

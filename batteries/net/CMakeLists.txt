@@ -32,7 +32,7 @@ batteries_cc_library(
 	COPTS
 		${BATT_DEFAULT_COPTS}
 	DEPS
-		${CONAN_LIBS}
+		${BATT_COMMON_LIBS}
 	PUBLIC
 )
 
@@ -46,5 +46,6 @@ batteries_cc_test(
 		${BATT_TEST_COPTS}
 	DEPS
 		batteries::net
-		${CONAN_LIBS}
+		${BATT_COMMON_LIBS}
+		${BATT_TEST_COMMON_LIBRARIES}
 )

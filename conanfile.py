@@ -32,10 +32,10 @@ class BatteriesConan(ConanFile):
     exports = ["LICENSE"]
     exports_sources = ["CMakeLists.txt", "conan.cmake",
                        "conanfile.py", "CMake/*", "batteries/*"]
-    generators = "cmake"
+    generators = "cmake_find_package"
     settings = "os", "arch", "compiler", "build_type"
-    requires = "abseil/20211102.0"
-    build_requires = "gtest/cci.20210126"
+    requires = ["abseil/20211102.0"]
+    build_requires = ["gtest/cci.20210126", "doctest/2.4.9"]
     options = {"cxx_standard": [17, 20], "build_testing": [
         True, False], "fPIC": [True, False]}
     default_options = {"cxx_standard": 20, "build_testing": True, "fPIC": True}
@@ -64,8 +64,7 @@ class BatteriesConan(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.definitions["BATT_RUN_TESTS"] = self.options.build_testing
-        cmake.definitions["BUILD_TESTING"] = self.options.build_testing
+        cmake.definitions["BATT_BUILD_TESTING"] = self.options.build_testing
         cmake.definitions["CMAKE_CXX_STANDARD"] = self.options.cxx_standard
         cmake.configure()
         cmake.build()

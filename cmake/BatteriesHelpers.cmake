@@ -39,7 +39,7 @@ set(BATT_IDE_FOLDER Batteries)
 # LINKOPTS: List of link options
 # PUBLIC: Add this so that this library will be exported under batteries::
 # Also in IDE, target will appear in Batteries folder while non PUBLIC will be in Batteries/internal.
-# TESTONLY: When added, this target will only be built if user passes -DBATT_RUN_TESTS=ON to CMake.
+# TESTONLY: When added, this target will only be built if user passes -DBATT_BUILD_TESTING=ON to CMake.
 #
 # Note:
 # By default, batteries_cc_library will always create a library named batteries_${NAME},
@@ -81,7 +81,7 @@ function(batteries_cc_library)
     ${ARGN}
   )
 
-  if(NOT BATT_CC_LIB_TESTONLY OR BATT_RUN_TESTS)
+  if(NOT BATT_CC_LIB_TESTONLY OR BATT_BUILD_TESTING)
     if(BATT_ENABLE_INSTALL)
       set(_NAME "${BATT_CC_LIB_NAME}")
     else()
@@ -213,7 +213,7 @@ endfunction()
 #     gtest_main
 # )
 function(batteries_cc_test)
-  if(NOT BATT_RUN_TESTS)
+  if(NOT BATT_BUILD_TESTING)
     return()
   endif()
 

@@ -5,7 +5,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      https://www.apache.org/licenses/LICENSE-2.0
+#    https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,27 +14,14 @@
 # limitations under the License.
 #
 
-batteries_cc_library(
-  NAME
-    errors
-  HDRS
-    error.hpp
-  COPTS
-    ${BATT_DEFAULT_COPTS}
-  # DEPS
-  #   batteries::config
-  PUBLIC
-)
+# Required for Testing
+if(BATT_BUILD_TESTING)
+  find_package(GTest REQUIRED)
+endif()
 
-batteries_cc_test(
-  NAME
-    error_test
-  SRCS
-    "error_test.cpp"
-  COPTS
-    ${BATT_TEST_COPTS}
-  DEPS
-    batteries::errors
-		${BATT_COMMON_LIBS}
-		${BATT_TEST_COMMON_LIBRARIES}
-)
+# Required Dependency
+find_package(Threads REQUIRED)
+find_package(absl REQUIRED)
+
+# Optional Dependency, doesn't trigger error if missing
+# find_package(OpenSSL)
